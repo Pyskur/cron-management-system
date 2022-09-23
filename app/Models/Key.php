@@ -10,6 +10,7 @@ class Key extends Model
     use HasFactory;
 
     protected $fillable = [
+        'title',
         'key',
         'level',
         'ignore_limits',

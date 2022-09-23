@@ -32,7 +32,8 @@ class KeyController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'key' => 'required|string|max:50',
+            'title' => 'required|string|max:50',
+            'key' => 'required|string|size:32|alpha_num',
             'level' => 'required|numeric',
             'ignore_limits' => 'required|numeric',
             'is_private_key' => 'required|numeric',
@@ -91,7 +92,8 @@ class KeyController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'key' => 'nullable|string|max:50',
+            'title' => 'nullable|string|max:50',
+            'key' => 'nullable|string|size:32|alpha_num',
             'level' => 'nullable|numeric',
             'ignore_limits' => 'nullable|numeric',
             'is_private_key' => 'nullable|numeric',

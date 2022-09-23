@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CronController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\KeyController;
 
@@ -35,3 +36,4 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
 Route::apiResource('users', UserController::class);
 Route::apiResource('notifications', NotificationController::class);
 Route::apiResource('keys', KeyController::class);
+Route::apiResource('crons', CronController::class);

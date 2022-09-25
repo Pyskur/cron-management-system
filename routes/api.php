@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\KeyController;
 use App\Http\Controllers\Api\KeysCodeController;
 use App\Http\Controllers\Api\KeysRefController;
 use App\Http\Controllers\Api\KeysSmsController;
+use App\Http\Controllers\Api\AutoRenewController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +46,7 @@ Route::apiResource('keys_refs', KeysRefController::class);
 Route::apiResource('keys_smses', KeysSmsController::class);
 Route::apiResource('crons', CronController::class);
 Route::apiResource('payments', CronController::class);
-Route::apiResource('auto_renews', CronController::class);
+Route::apiResource('auto_renew', AutoRenewController::class);
 Route::apiResource('companys', CronController::class);
 Route::apiResource('epds', CronController::class);
 Route::apiResource('groups', CronController::class);

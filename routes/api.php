@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\KeysCodeController;
 use App\Http\Controllers\Api\KeysRefController;
 use App\Http\Controllers\Api\KeysSmsController;
 use App\Http\Controllers\Api\AutoRenewController;
+use App\Http\Controllers\Api\EpdController;
 
 
 /*
@@ -51,7 +52,7 @@ Route::apiResource('crons', CronController::class);
 Route::apiResource('payments', CronController::class);
 Route::apiResource('auto_renew', AutoRenewController::class);
 Route::apiResource('companies', CompanyController::class);
-Route::apiResource('epds', CronController::class);
+Route::apiResource('epds', EpdController::class);
 Route::apiResource('groups', GroupController::class);
 Route::apiResource('http_settings', CronController::class);
 Route::apiResource('limits', LimitController::class);

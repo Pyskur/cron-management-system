@@ -3,30 +3,21 @@ image: atlassian/default-image:2
 pipelines:
   default:
     - step:
+        name: Build artifact
         script:
-          - apt-get update
-          - apt-get install -y zip
-          - zip -r application1.zip .
-          - pipe: atlassian/aws-code-deploy:0.2.5
+          - mkdir artifact
+          - echo "Pipelines is awesome!" > artifact/index.html
+        artifacts:
+          - artifact/*
+    - step:
+        name: Deploy to S3
+        deployment: staging
+        script:
+          - pipe: atlassian/aws-s3-deploy:0.3.8
             variables:
-              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
               AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
               AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-              APPLICATION_NAME: $APPLICATION_NAME
+              AWS_DEFAULT_REGION: 'eu-west-2'
               S3_BUCKET: $S3_BUCKET
-              COMMAND: 'upload'
-              ZIP_FILE: 'application1.zip'
-              VERSION_LABEL: 'my-app-1.0.0'
-          - pipe: atlassian/aws-code-deploy:0.2.5
-            variables:
-              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
-              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-              APPLICATION_NAME: $APPLICATION_NAME
-              DEPLOYMENT_GROUP: $DEPLOYMENT_GROUP
-              S3_BUCKET: $S3_BUCKET
-              COMMAND: 'deploy'
-              WAIT: 'true'
-              VERSION_LABEL: 'my-app-1.0.0'
-              IGNORE_APPLICATION_STOP_FAILURES: 'true'
-              FILE_EXISTS_BEHAVIOR: 'OVERWRITE'
+              LOCAL_PATH: 'artifact'
+              ACL: 'public-read'

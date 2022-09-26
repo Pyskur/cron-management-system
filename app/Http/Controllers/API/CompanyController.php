@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Support\Facades\App;
+use App\Http\Controllers\Controller;
 use App\Models\Company;
 use Illuminate\Http\Request;
+use Validator;
 
 class CompanyController extends Controller
 {
@@ -14,7 +17,8 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        //
+        $companies = Company::all();
+        return response()->json($companies);
     }
 
     /**
@@ -25,7 +29,36 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'name' => 'required|string|max:50'
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $company = Company::create($input);
+            return response()->json($company);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "Company store error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
     }
 
     /**
@@ -36,7 +69,7 @@ class CompanyController extends Controller
      */
     public function show(Company $company)
     {
-        //
+        return response()->json($company);
     }
 
     /**
@@ -48,7 +81,36 @@ class CompanyController extends Controller
      */
     public function update(Request $request, Company $company)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'name' => 'nullable|string|max:50'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $company->update($input);
+            return response()->json($company);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "Company update error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
     }
 
     /**
@@ -59,6 +121,7 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company)
     {
-        //
+        $company->delete();
+        return response()->json();
     }
 }

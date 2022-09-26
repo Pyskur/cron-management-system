@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\KeysRefController;
 use App\Http\Controllers\Api\KeysSmsController;
 use App\Http\Controllers\Api\AutoRenewController;
 use App\Http\Controllers\Api\EpdController;
+use App\Http\Controllers\Api\OrderController;
 
 
 /*
@@ -56,5 +57,5 @@ Route::apiResource('epds', EpdController::class);
 Route::apiResource('groups', GroupController::class);
 Route::apiResource('http_settings', CronController::class);
 Route::apiResource('limits', LimitController::class);
-Route::apiResource('orders', CronController::class);
+Route::apiResource('orders', OrderController::class);
 Route::apiResource('videos', CronController::class);

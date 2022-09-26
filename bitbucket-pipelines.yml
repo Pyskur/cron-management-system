@@ -4,9 +4,6 @@ pipelines:
   default:
     - step:
         script:
-          - yum update
-          - yum install -y zip
-          - zip -r application1.zip .
           - pipe: atlassian/aws-code-deploy:0.2.10
             variables:
               AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION

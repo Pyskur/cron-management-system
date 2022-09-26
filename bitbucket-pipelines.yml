@@ -4,6 +4,9 @@ pipelines:
   default:
     - step:
         script:
+          - apt-get update
+          - apt-get install -y zip
+          - zip -r application1.zip .
           - pipe: atlassian/aws-code-deploy:0.2.10
             variables:
               AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION

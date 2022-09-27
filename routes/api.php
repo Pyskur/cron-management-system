@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\EpdController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\HttpSettingController;
+use App\Http\Controllers\Api\SmsController;
 
 
 /*
@@ -64,3 +65,4 @@ Route::apiResource('videos', VideoController::class);
 
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::get('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
+Route::apiResource('sms', SmsController::class);

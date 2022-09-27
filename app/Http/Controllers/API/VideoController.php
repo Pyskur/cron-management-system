@@ -190,7 +190,7 @@ class VideoController extends Controller
         $video = Video::create($newVideo);
 
         //Upload to S3 bucket
-        $filePath = 'uploads/videos/' . $uuid. ".".$fileExt;
+        $filePath = env('AWS_S3_BUCKET_FOLDER', 'assets01')."/videos/" . $uuid. ".".$fileExt;
         $result = Storage::disk('s3')->put($filePath, file_get_contents($request->file));
         $path = Storage::disk('s3')->url($filePath);
         

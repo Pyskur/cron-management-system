@@ -17,7 +17,6 @@ return new class extends Migration
         Schema::create('videos', function (Blueprint $table) {
             $table->id();
             $table->string('title')->nullable();
-            $table->dateTime('date_registered')->nullable();
             $table->string('filename')->nullable();
             $table->integer('status')->nullable();
             $table->string('file_size', 45)->nullable();

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\EpdController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\HttpSettingController;
+use App\Http\Controllers\Api\SmsController;
 
 
 /*
@@ -61,3 +62,4 @@ Route::apiResource('http_settings', HttpSettingController::class);
 Route::apiResource('limits', LimitController::class);
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('videos', VideoController::class);
+Route::apiResource('sms', SmsController::class);

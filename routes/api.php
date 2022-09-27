@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\AutoRenewController;
 use App\Http\Controllers\Api\EpdController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\VideoController;
+use App\Http\Controllers\Api\HttpSettingController;
 
 
 /*
@@ -56,7 +57,7 @@ Route::apiResource('auto_renew', AutoRenewController::class);
 Route::apiResource('companies', CompanyController::class);
 Route::apiResource('epds', EpdController::class);
 Route::apiResource('groups', GroupController::class);
-Route::apiResource('http_settings', CronController::class);
+Route::apiResource('http_settings', HttpSettingController::class);
 Route::apiResource('limits', LimitController::class);
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('videos', VideoController::class);

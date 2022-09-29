@@ -64,7 +64,5 @@ Route::apiResource('orders', OrderController::class);
 Route::apiResource('videos', VideoController::class);
 
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
-Route::post('videos/new/upload-local', [VideoController::class, 'uploadVideoLocal']);
-Route::post('videos/new/upload-local-s3', [VideoController::class, 'uploadVideoLocalS3']);
 Route::get('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::apiResource('sms', SmsController::class);

@@ -207,63 +207,7 @@ class VideoController extends Controller
             "s3_path" =>  $path
         ]);
     }
-    public function uploadVideoLocal(Request $request)
-    {
-
-        $input = $request->all();
-
-        $validator = Validator::make($input, [
-            'title'=> 'required|string',
-            'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi'
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        //Get Info of File
-        $uuid = (string) Str::uuid();
-        $fileName = $request->file->getClientOriginalName();
-        $fileExt = $request->file->getClientOriginalExtension();
-        $fileSize = $request->file->getSize();
-
-        //Move Uploaded File
-        Storage::disk('local')->put('file.txt', $fileName);
-        $destinationPath = 'uploads';
-        $r = $request->file->move($destinationPath,$request->file->getClientOriginalName());
-        // Storage::disk('local')->put($fileName, $request->file);
-
-
-        return response()->json([
-            "result" =>  "done",
-            "r"=>Storage::disk('local')->exists('file.txt'),
-            "rr"=>$r,
-            // "r1"=>Storage::disk('local')->exists($fileName),
-        ]);
-    }
-    public function uploadVideoLocalS3(Request $request)
-    {
-
-        //Get Info of File
-        $uuid = (string) Str::uuid();
-
-
-        //Upload to S3 bucket
-        $filePath = env('AWS_S3_BUCKET_FOLDER', 'assets01')."/videos/" . $uuid. ".txt";
-        $result = Storage::disk('s3')->put($filePath, file_get_contents(public_path("robots.txt")));
-        $path = Storage::disk('s3')->url($filePath);
-        
-        return response()->json([
-            "result" =>  $result,
-            "s3_path" =>  $path
-        ]);
-    }
-
-        /**
+    /**
      * Webhook to receive uploaded url from AWS SNS.
      *
      * @param  \Illuminate\Http\Request  $request

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Support\Facades\App;
+use App\Http\Controllers\Controller;
 use App\Models\UsersNotifications;
 use Illuminate\Http\Request;
+use Validator;
 
 class UsersNotificationsController extends Controller
 {

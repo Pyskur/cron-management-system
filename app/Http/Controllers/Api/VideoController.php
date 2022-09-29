@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 use App\Models\Test;
 
 class VideoController extends Controller
@@ -216,12 +217,38 @@ class VideoController extends Controller
      */
     public function hookVideoUploaded(Request $request)
     {
-        $data = $request->json();
+        $data = $request->json()->all();
+        //Only for Test
         Test::create([
             'data' => json_encode($request->json()->all())
         ]);
-        return response()->json([
-            "result" => $request->json()->all()
-        ]);
+
+        if($data["Type"] == "SubscriptionConfirmation"){
+            //Confirm Subscription of AWS SNS once
+            $subscribeURL = $data["SubscribeURL"];
+            $response = Http::get($subscribeURL);
+            return response()->json([
+                "type" => "SubscriptionConfirmation",
+                "result" => $response->body()
+            ]);
+
+        }
+        else if($data["Type"] == "Notification"){
+            //Notification of AWS SNS
+
+            //TODO
+            return response()->json([
+                "type" => "Notification",
+                "result" => $data
+            ]);
+        } 
+        else{
+            return response()->json([
+                "type" => "Unknown",
+                "result" => $data
+            ]);
+        }
+
+  
     }
 }

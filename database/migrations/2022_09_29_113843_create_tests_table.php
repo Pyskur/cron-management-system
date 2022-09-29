@@ -13,16 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('companies', function (Blueprint $table) {
+        Schema::create('tests', function (Blueprint $table) {
             $table->id();
+            $table->text('data');
             $table->timestamps();
-
-            $table->string('name', 50)->nullable();
-            $table->string('sso_token', 255)->nullable();
-            $table->string('billing_detail', 255)->nullable();
-            $table->string('address', 255)->nullable();
-            $table->string('domain', 255)->nullable();
-            $table->string('whitelist_ip', 255)->nullable();
         });
     }
 
@@ -33,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('tests');
     }
 };

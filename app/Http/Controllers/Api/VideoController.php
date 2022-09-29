@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\Test;
 
 class VideoController extends Controller
 {
@@ -207,8 +208,7 @@ class VideoController extends Controller
             "s3_path" =>  $path
         ]);
     }
-
-        /**
+    /**
      * Webhook to receive uploaded url from AWS SNS.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -216,6 +216,12 @@ class VideoController extends Controller
      */
     public function hookVideoUploaded(Request $request)
     {
-
+        $data = $request->all();
+        Test::create([
+            'data' => json_encode($data)
+        ]);
+        return response()->json([
+            "result" => $data,
+        ]);
     }
 }

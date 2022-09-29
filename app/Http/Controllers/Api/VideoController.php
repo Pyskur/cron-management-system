@@ -182,12 +182,8 @@ class VideoController extends Controller
             'filename' => $fileName,
             'status' => 1, //uploading
             'file_size' => $fileSize,
-            'geo_restrict' => 0, //TODO
-            'thumbnail' => '', //TODO
-            'parent_name' => '', //TODO
-            'url' => '',
-            'drm_enabled' => 0, //TODO
-            'user_id' => 1 //TODO
+            'user_id' => 1, //TODO,
+            'uuid'=> $uuid
         ];
         $video = Video::create($newVideo);
 
@@ -199,14 +195,14 @@ class VideoController extends Controller
         if($result){
             //Success uploading
            $video->update([
-                'status' => 2, // Encoding //TODO to check if it's right.
-                'url' => $path
+                'status' => 2, // Encoding
+                'src_url' => $path
            ]);
 
         }
         return response()->json([
             "result" =>  $result,
-            "s3_path" =>  $path
+            "src_path" =>  $path
         ]);
     }
     /**
@@ -219,9 +215,9 @@ class VideoController extends Controller
     {
         $data = $request->json()->all();
         //Only for Test
-        Test::create([
-            'data' => json_encode($request->json()->all())
-        ]);
+        // Test::create([
+        //     'data' => json_encode($request->json()->all())
+        // ]);
 
         if($data["Type"] == "SubscriptionConfirmation"){
             //Confirm Subscription of AWS SNS once
@@ -235,11 +231,31 @@ class VideoController extends Controller
         }
         else if($data["Type"] == "Notification"){
             //Notification of AWS SNS
+            $message = json_decode($data["Message"]);
+            $outputURL = $message->Outputs->HLS_GROUP[0];
+            $tokens = explode("/", $outputURL);
+            $outFolder = $tokens[3];
+            $uuid = explode(".", $tokens[5])[0];
+            $video = Video::where('uuid', $uuid)->firstOrFail();
 
-            //TODO
+            //get folder size of AWS S3
+            $apiUrl = env('AWS_S3_API_GET_FOLDER_SIZE');
+            $apiBucketName = env('AWS_S3_DESTINATION_BUCKET');
+            $getFolderSizeUrl = "{$apiUrl}?bucketName={$apiBucketName}&folderPath={$outFolder}";
+            $outFolderSizeResponse = Http::get($getFolderSizeUrl);
+            $sizeData = $outFolderSizeResponse->json();
+            $video->update([
+                'status' => 3, // Available
+                'out_url' => $outputURL,
+                'out_folder' => $outFolder,
+                'out_folder_size' => $sizeData["statusCode"] == 200 ? $sizeData["data"]["size"] : 0,
+            ]);
+
             return response()->json([
                 "type" => "Notification",
-                "result" => $data
+                "result" => $video,
+                "out"=>$sizeData,
+                "url"=>$getFolderSizeUrl
             ]);
         } 
         else{

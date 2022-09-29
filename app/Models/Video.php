@@ -17,8 +17,12 @@ class Video extends Model
         'geo_restrict',
         'thumbnail',
         'parent_name',
-        'url',
         'drm_enabled',
-        'user_id'
+        'user_id',
+        'uuid',
+        'src_url',
+        'out_url',
+        'out_folder',
+        'out_folder_size',
     ];
 }

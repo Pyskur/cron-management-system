@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\HttpSettingController;
 use App\Http\Controllers\Api\SmsController;
+use App\Http\Controllers\Api\ReportController;
 
 
 /*
@@ -66,3 +67,7 @@ Route::apiResource('videos', VideoController::class);
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::apiResource('sms', SmsController::class);
+
+Route::get('report/daily_report', [ReportController::class, 'daily_report']);
+Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
+Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);

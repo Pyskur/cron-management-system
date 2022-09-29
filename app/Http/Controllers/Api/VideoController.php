@@ -216,12 +216,12 @@ class VideoController extends Controller
      */
     public function hookVideoUploaded(Request $request)
     {
-        $data = $request->all();
+        $data = $request->json();
         Test::create([
-            'data' => json_encode($data)
+            'data' => json_encode($request->json()->all())
         ]);
         return response()->json([
-            "result" => $data,
+            "result" => $request->json()->all()
         ]);
     }
 }

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Models\UsersCompanies;
+use App\Models\UsersGroups;
 use Illuminate\Http\Request;
 
-class UsersCompaniesController extends Controller
+class UsersGroupsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -31,10 +31,10 @@ class UsersCompaniesController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\UsersCompanies  $usersCompanies
+     * @param  \App\Models\UsersGroups  $usersGroups
      * @return \Illuminate\Http\Response
      */
-    public function show(UsersCompanies $usersCompanies)
+    public function show(UsersGroups $usersGroups)
     {
         //
     }
@@ -43,10 +43,10 @@ class UsersCompaniesController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UsersCompanies  $usersCompanies
+     * @param  \App\Models\UsersGroups  $usersGroups
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, UsersCompanies $usersCompanies)
+    public function update(Request $request, UsersGroups $usersGroups)
     {
         //
     }
@@ -54,10 +54,10 @@ class UsersCompaniesController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\UsersCompanies  $usersCompanies
+     * @param  \App\Models\UsersGroups  $usersGroups
      * @return \Illuminate\Http\Response
      */
-    public function destroy(UsersCompanies $usersCompanies)
+    public function destroy(UsersGroups $usersGroups)
     {
         //
     }

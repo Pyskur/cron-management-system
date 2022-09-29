@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Models\UsersGroups;
+use App\Models\UsersNotifications;
 use Illuminate\Http\Request;
 
-class UsersGroupsController extends Controller
+class UsersNotificationsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -31,10 +31,10 @@ class UsersGroupsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\UsersGroups  $usersGroups
+     * @param  \App\Models\UsersNotifications  $usersNotifications
      * @return \Illuminate\Http\Response
      */
-    public function show(UsersGroups $usersGroups)
+    public function show(UsersNotifications $usersNotifications)
     {
         //
     }
@@ -43,10 +43,10 @@ class UsersGroupsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UsersGroups  $usersGroups
+     * @param  \App\Models\UsersNotifications  $usersNotifications
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, UsersGroups $usersGroups)
+    public function update(Request $request, UsersNotifications $usersNotifications)
     {
         //
     }
@@ -54,10 +54,10 @@ class UsersGroupsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\UsersGroups  $usersGroups
+     * @param  \App\Models\UsersNotifications  $usersNotifications
      * @return \Illuminate\Http\Response
      */
-    public function destroy(UsersGroups $usersGroups)
+    public function destroy(UsersNotifications $usersNotifications)
     {
         //
     }

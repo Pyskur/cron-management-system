@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\HttpSettingController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\UsersCompaniesController;
 
 
 /*
@@ -71,3 +72,8 @@ Route::apiResource('sms', SmsController::class);
 Route::get('report/daily_report', [ReportController::class, 'daily_report']);
 Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
 Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
+
+Route::post('users_companies/getCompanies', [UsersCompaniesController::class, 'getCompanies']);
+Route::post('users_companies/getUsers', [UsersCompaniesController::class, 'getUsers']);
+Route::post('users_companies/addUsertoCompany', [UsersCompaniesController::class, 'addUsertoCompany']);
+Route::post('users_companies/deleteUsertoCompany', [UsersCompaniesController::class, 'deleteUsertoCompany']);

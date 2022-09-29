@@ -11,5 +11,10 @@ class Company extends Model
 
     protected $fillable = [
         'name',
-     ];
+        'sso_token',
+        'billing_detail',
+        'address',
+        'domain',
+        'whitelist_ip',
+    ];
 }

@@ -32,7 +32,12 @@ class CompanyController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'name' => 'required|string|max:50'
+            'name' => 'required|string|max:50',
+            'sso_token' => 'required|string|max:255',
+            'billing_detail' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'domain' => 'required|string|max:255',
+            'whitelist_ip' => 'required|string|max:255',
         ]);
         
         if($validator->fails()){
@@ -81,10 +86,15 @@ class CompanyController extends Controller
      */
     public function update(Request $request, Company $company)
     {
-        $input = $request->all();
+        $input = $request->all();        
 
         $validator = Validator::make($input, [
-            'name' => 'nullable|string|max:50'
+            'name' => 'string|max:50',
+            'sso_token' => 'string|max:255',
+            'billing_detail' => 'string|max:255',
+            'address' => 'string|max:255',
+            'domain' => 'string|max:255',
+            'whitelist_ip' => 'string|max:255',
         ]);
 
         if($validator->fails()){

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\HttpSettingController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UsersCompaniesController;
+use App\Http\Controllers\Api\UsersGroupsController;
 
 
 /*
@@ -76,4 +77,10 @@ Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
 Route::post('users_companies/getCompanies', [UsersCompaniesController::class, 'getCompanies']);
 Route::post('users_companies/getUsers', [UsersCompaniesController::class, 'getUsers']);
 Route::post('users_companies/addUsertoCompany', [UsersCompaniesController::class, 'addUsertoCompany']);
-Route::post('users_companies/deleteUsertoCompany', [UsersCompaniesController::class, 'deleteUsertoCompany']);
+Route::post('users_companies/deleteUserfromCompany', [UsersCompaniesController::class, 'deleteUserfromCompany']);
+Route::post('users_companies/addGrouptoCompany', [UsersCompaniesController::class, 'addGrouptoCompany']);
+
+Route::post('users_groups/getGroups', [UsersGroupsController::class, 'getGroups']);
+Route::post('users_groups/getUsers', [UsersGroupsController::class, 'getUsers']);
+Route::post('users_groups/addUsertoGroup', [UsersGroupsController::class, 'addUsertoGroup']);
+Route::post('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);

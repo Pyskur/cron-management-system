@@ -103,13 +103,48 @@ class UsersCompaniesController extends Controller
         }
     }
 
+    public function addGrouptoCompany(Request $request)
+    {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'company_id' => 'required|integer',
+            'group_id' => 'required|integer',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $user_company = UsersCompanies::create($input);
+            return response()->json($user_company);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "UsersCompanies store error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
+    }
+
     /**
      * Remove the specified resource from storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function deleteUsertoCompany(Request $request)
+    public function deleteUserfromCompany(Request $request)
     {
         $input = $request->all();
 

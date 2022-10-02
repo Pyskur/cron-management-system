@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\HttpSettingController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UsersCompaniesController;
+use App\Http\Controllers\Api\CountryController;
 
 
 /*
@@ -64,9 +65,11 @@ Route::apiResource('http_settings', HttpSettingController::class);
 Route::apiResource('limits', LimitController::class);
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('videos', VideoController::class);
+Route::apiResource('country', CountryController::class);
 
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
+Route::post('videos/test', [VideoController::class, 'test']);
 Route::apiResource('sms', SmsController::class);
 
 Route::get('report/daily_report', [ReportController::class, 'daily_report']);

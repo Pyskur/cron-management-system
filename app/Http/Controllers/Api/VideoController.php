@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use App\Models\Test;
-
+use App\Models\GeoGroup;
+use App\Models\AwsCloudfrontDistribution;
+use App\Models\CountryGeoGroupMap;
+use App\Models\Country;
 class VideoController extends Controller
 {
     /**
@@ -218,6 +221,12 @@ class VideoController extends Controller
         // Test::create([
         //     'data' => json_encode($request->json()->all())
         // ]);
+        if($data == null || !array_key_exists('Type', $data)){
+            return response()->json([
+                "type" => "Error",
+                "result" => "Input Data Error"
+            ]);
+        }
 
         if($data["Type"] == "SubscriptionConfirmation"){
             //Confirm Subscription of AWS SNS once
@@ -264,7 +273,89 @@ class VideoController extends Controller
                 "result" => $data
             ]);
         }
+    }
 
-  
+    private function _getGeoGroupIDFromCountries($countryIDList, $isBlacklist){
+        sort($countryIDList);
+        foreach (GeoGroup::where('is_global', false)->where('is_blacklist', $isBlacklist)->cursor() as $geoGroup) {
+            $geoGrouopCountries = [];
+            foreach($geoGroup->countries as $country){
+                $geoGrouopCountries[] = $country->id;
+            }
+            sort($geoGrouopCountries);
+            if($countryIDList == $geoGrouopCountries){
+                return $geoGroup->id;
+            }
+        }
+
+        //Not found existing GeoGroup, so create new GeoGroup
+
+        //make description for aws_cloudfront_distributions
+        $description = "";
+        if ($isBlacklist)
+            $description .= "Block: ";
+        else
+            $description .= "Allow: ";
+        foreach($countryIDList as $countryID){
+            $description .= Country::find($countryID)->code . ' ';  
+        }
+
+        //TODO --aws web requet to create aws_cloudfront_distributions
+        //TODO --create new aws_cloudfront_distributions
+        $data = [
+            'dist_id' => 'EY93EFIEF', //TODO
+            'description' => $description, //TODO
+            'domain_name' => 'test domainname', //TODO
+            'alt_domain_name' => 'test alt domainname',//TODO
+            'origin' => 'aws.efewef', //TODO,
+        ]; 
+        $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);
+                            
+        //TODO --create new geogroup with aws_cloudfront_distributions.id
+        $newGeoGroup = GeoGroup::create([
+            'is_blacklist' => $isBlacklist,
+            'is_global' => false,
+            'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
+        ]);
+        //TODO --create new country_geo_group_maps with geogroup.id and countryIDList
+        $addData = [];
+        foreach($countryIDList as $country){
+            $addData[] = [
+                'country_id' => $country,
+                'geo_group_id' => $newGeoGroup->id
+            ];   
+        }
+        CountryGeoGroupMap::insert($addData);
+        return $newGeoGroup->id;
+    }
+
+    public function test(Request $request)
+    {
+ 
+        $geoGroupID = 0;
+        if($request->white_list == null && $request->black_list == null){
+            //global geo_group
+            $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+            if($globalGeoGroup)
+                $geoGroupID = $globalGeoGroup->id;
+        }
+        else if($request->black_list != null){
+            //process black list
+            $countryIDList = json_decode($request->black_list);
+            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+        }
+        else if($request->white_list != null){
+            //process white list
+            $countryIDList = json_decode($request->white_list);
+            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+        }
+        //TODO process video with geoGroupID
+
+        return response()->json([
+            "result" => "test",
+            "result1" => $request->white_list,
+            "result2" => $request->black_list,
+            "geogroupID" => $geoGroupID
+        ]);
     }
 }

@@ -268,7 +268,13 @@ class VideoController extends Controller
             $tokens = explode("/", $outputURL);
             $outFolder = $tokens[3];
             $uuid = explode(".", $tokens[5])[0];
-            $video = Video::where('uuid', $uuid)->firstOrFail();
+            $video = Video::where('uuid', $uuid)->first();
+            if($video == null){
+                return response()->json([
+                    "type" => "Error",
+                    "result" => "Unknown uuid from Notification"
+                ]);
+            }
 
             //get folder size of AWS S3
             $apiUrl = env('AWS_S3_API_GET_FOLDER_SIZE');
@@ -292,7 +298,7 @@ class VideoController extends Controller
         } 
         else{
             return response()->json([
-                "type" => "Unknown",
+                "type" => "Error",
                 "result" => $data
             ]);
         }
@@ -317,6 +323,10 @@ class VideoController extends Controller
         ////aws sdk to create aws_cloudfront_distributions
         $distributionResult = $this->_createCloudFrontDistribution($countryIDList, $isBlacklist);
 
+        ////add custom doman to aws Route53
+        $newDomainName = $this->_addCustomDomain($distributionResult["DomainName"]);
+        ////add certificate, alternative domain name to cloudfront distribution
+        $this->_updateCloudfrontDistributionWithAlias($distributionResult["ID"], $newDomainName);
         ////create new aws_cloudfront_distributions
         $data = [
             'dist_id' => $distributionResult["ID"],
@@ -388,7 +398,7 @@ class VideoController extends Controller
             ],
             'ViewerProtocolPolicy' => 'allow-all'
         ];
-        $enabled = false;
+        $enabled = true;
         $origin = [
             'Items' => [
                 [
@@ -459,46 +469,174 @@ class VideoController extends Controller
             return [];
         }
     }
+    function _addCustomDomain($redirectDomain){
+        $uuid = (string) Str::uuid();
+        $uuid = str_replace("-", "", $uuid);
+        $newDomainName = $uuid.env('AWS_ROUTE53_APP_CDN_NAME','.cdn.veri.app');
+        $changeBatch = [
+            'Comment' => 'Add new custom domain for cloudfront distribution geo restriction',
+            'Changes' => [
+                [
+                    'Action' => 'CREATE',
+                    'ResourceRecordSet' => [
+                        'Name' => $newDomainName,
+                        'Type' => 'CNAME',
+                        'TTL' => 600,
+                        'ResourceRecords' => [
+                            [
+                                'Value' => $redirectDomain,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $route53Client = \AWS::createClient('Route53');
+        try {
+            $result = $route53Client->changeResourceRecordSets([
+                'HostedZoneId' => env('AWS_ROUTE53_APP_HOSTED_ZONE_ID'),
+                'ChangeBatch' => $changeBatch
+            ]);
 
+            if (isset($result['ChangeInfo']))
+            {
+                return $newDomainName;
+            }
+            return "";
+        } catch (AwsException $e) {
+            return "";
+        }
+    }
+
+    function _getDistributionConfig($cloudFrontClient, $distributionId)
+    {
+        try {
+            $result = $cloudFrontClient->getDistribution([
+                'Id' => $distributionId,
+            ]);
+
+            if (isset($result['Distribution']['DistributionConfig']))
+            {
+                return [
+                    'DistributionConfig' => $result['Distribution']['DistributionConfig'],
+                    'effectiveUri' => $result['@metadata']['effectiveUri']
+                ];
+            } else {
+                return [
+                    'Error' => 'Error: Cannot find distribution configuration details.',
+                    'effectiveUri' => $result['@metadata']['effectiveUri']
+                ];
+            }
+
+        } catch (AwsException $e) {
+            return [
+                'Error' => 'Error: ' . $e->getAwsErrorMessage()
+            ];
+        }
+    }
+
+    function _getDistributionETag($cloudFrontClient, $distributionId)
+    {
+
+        try {
+            $result = $cloudFrontClient->getDistribution([
+                'Id' => $distributionId,
+            ]);
+            
+            if (isset($result['ETag']))
+            {
+                return [
+                    'ETag' => $result['ETag'],
+                    'effectiveUri' => $result['@metadata']['effectiveUri']
+                ]; 
+            } else {
+                return [
+                    'Error' => 'Error: Cannot find distribution ETag header value.',
+                    'effectiveUri' => $result['@metadata']['effectiveUri']
+                ];
+            }
+
+        } catch (AwsException $e) {
+            return [
+                'Error' => 'Error: ' . $e->getAwsErrorMessage()
+            ];
+        }
+    }
+
+    function _updateCloudfrontDistributionWithAlias($distributionID, $altDomainName){
+        $cloudFrontClient = \AWS::createClient('CloudFront');
+
+        $eTag = $this->_getDistributionETag($cloudFrontClient, $distributionID);
+
+        if (array_key_exists('Error', $eTag)) {
+            return [
+                "Error" => $eTag['Error']
+            ];
+        }
+
+        $currentConfig = $this->_getDistributionConfig($cloudFrontClient, $distributionID);
+
+        if (array_key_exists('Error', $currentConfig)) {
+            return [
+                "Error" => $currentConfig['Error']
+            ];          
+        }
+
+        $distributionConfig = [
+            'Aliases' => [
+                'Items' => [$altDomainName],
+                'Quantity' => 1
+            ],
+            'CallerReference' => $currentConfig['DistributionConfig']["CallerReference"], 
+            'Comment' => $currentConfig['DistributionConfig']["Comment"], 
+            'DefaultCacheBehavior' => $currentConfig['DistributionConfig']["DefaultCacheBehavior"], 
+            'DefaultRootObject' => $currentConfig['DistributionConfig']["DefaultRootObject"],
+            'Enabled' => $currentConfig['DistributionConfig']["Enabled"], 
+            'Origins' => $currentConfig['DistributionConfig']["Origins"], 
+            'CustomErrorResponses' => $currentConfig['DistributionConfig']["CustomErrorResponses"],
+            'HttpVersion' => $currentConfig['DistributionConfig']["HttpVersion"],
+            'CacheBehaviors' => $currentConfig['DistributionConfig']["CacheBehaviors"],
+            'Logging' => $currentConfig['DistributionConfig']["Logging"],
+            'PriceClass' => $currentConfig['DistributionConfig']["PriceClass"],
+            'Restrictions' => $currentConfig['DistributionConfig']["Restrictions"],
+            'ViewerCertificate' => [
+                'ACMCertificateArn' => env('AWS_SSL_CERTIFICATE_APP'),
+                'Certificate' => env('AWS_SSL_CERTIFICATE_APP'),
+                'CertificateSource' => 'acm',
+                'CloudFrontDefaultCertificate' => false,
+                'MinimumProtocolVersion' => 'TLSv1.2_2021',
+                'SSLSupportMethod' => 'sni-only',
+            ],
+            'WebACLId' => $currentConfig['DistributionConfig']["WebACLId"]
+        ];
+
+
+        try {
+            $result = $cloudFrontClient->updateDistribution([
+                'Id' => $distributionID,
+                'DistributionConfig' => $distributionConfig,
+                'IfMatch' => $eTag['ETag']
+            ]);
+
+            if (isset($result['Distribution']))
+            {
+                $resultData = [
+                    "ID" => $result['Distribution']["Id"]
+                ];
+                return $resultData;
+            }
+            return [];
+        } catch (AwsException $e) {
+            return [];
+        }
+    }
     public function test(Request $request)
     {
- 
-        // $geoGroupID = 0;
-        // if($request->white_list == null && $request->black_list == null){
-        //     //global geo_group
-        //     $globalGeoGroup = GeoGroup::where('is_global', true)->first();
-        //     if($globalGeoGroup)
-        //         $geoGroupID = $globalGeoGroup->id;
-        // }
-        // else if($request->black_list != null){
-        //     //process black list
-        //     $countryIDList = json_decode($request->black_list);
-        //     $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
-        // }
-        // else if($request->white_list != null){
-        //     //process white list
-        //     $countryIDList = json_decode($request->white_list);
-        //     $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
-        // }
-        // //TODO process video with geoGroupID
-
-        // return response()->json([
-        //     "result" => "test",
-        //     "result1" => $request->white_list,
-        //     "result2" => $request->black_list,
-        //     "geogroupID" => $geoGroupID
-        // ]);
-
-        // $s3 = App::make('aws')->createClient('s3');
-        // $s3->putObject(array(
-        //     'Bucket'     => 'aws-vod-source71e471f1-1xfelzhg0awdt',
-        //     'Key'        => 'YOUR_OBJECT_KEY',
-        //     'SourceFile' => 'C:\Users\admin\Documents\test.png',
-            
-        // ));
 
         //Test
-        // var_dump($this->_createCloudFrontDistribution([1,2,3], true));
-        
+        // var_dump($this->_addCustomDomain("dotvk0avcnmxl.cloudfront.net"));
+        var_dump($this->_updateCloudfrontDistributionWithAlias("E35IFL7A49UVRY", 'd87cc77a47ba495b9c9a3ac223d8c8d6.cdn.veri.app'));
+        // $cloudFrontClient = \AWS::createClient('CloudFront');
+        // var_dump($this->_getDistributionConfig($cloudFrontClient, "EY6CESNM58DSQ"));
     }
 }

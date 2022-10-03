@@ -179,6 +179,26 @@ class VideoController extends Controller
         $fileExt = $request->file->getClientOriginalExtension();
         $fileSize = $request->file->getSize();
 
+        //get GeoGroupID
+        $geoGroupID = 0;
+        if($request->white_list == null && $request->black_list == null){
+            //global geo_group
+            $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+            if($globalGeoGroup)
+                $geoGroupID = $globalGeoGroup->id;
+        }
+        else if($request->black_list != null){
+            //process black list
+            $countryIDList = json_decode($request->black_list);
+            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+        }
+        else if($request->white_list != null){
+            //process white list
+            $countryIDList = json_decode($request->white_list);
+            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+        }
+
+
         //insert video table
         $newVideo = [
             'title' => $request->title,
@@ -186,12 +206,14 @@ class VideoController extends Controller
             'status' => 1, //uploading
             'file_size' => $fileSize,
             'user_id' => 1, //TODO,
-            'uuid'=> $uuid
+            'uuid'=> $uuid,
+            'geo_group_id' => $geoGroupID
         ];
         $video = Video::create($newVideo);
 
+        $videoSubDirectory = $video->geoGroup->awsCloudfrontDistribution->dist_id;
         //Upload to S3 bucket
-        $filePath = env('AWS_S3_BUCKET_FOLDER', 'assets01')."/videos/" . $uuid. ".".$fileExt;
+        $filePath = env('AWS_S3_BUCKET_FOLDER', 'assets01')."/videos/". $videoSubDirectory."/" . $uuid. ".".$fileExt;
         $result = Storage::disk('s3')->put($filePath, file_get_contents($request->file));
         $path = Storage::disk('s3')->url($filePath);
         
@@ -205,7 +227,8 @@ class VideoController extends Controller
         }
         return response()->json([
             "result" =>  $result,
-            "src_path" =>  $path
+            "src_path" =>  $path,
+            "video_id" => $video->id
         ]);
     }
     /**
@@ -275,7 +298,7 @@ class VideoController extends Controller
         }
     }
 
-    private function _getGeoGroupIDFromCountries($countryIDList, $isBlacklist){
+    function _getGeoGroupIDFromCountries($countryIDList, $isBlacklist){
         sort($countryIDList);
         foreach (GeoGroup::where('is_global', false)->where('is_blacklist', $isBlacklist)->cursor() as $geoGroup) {
             $geoGrouopCountries = [];
@@ -284,40 +307,34 @@ class VideoController extends Controller
             }
             sort($geoGrouopCountries);
             if($countryIDList == $geoGrouopCountries){
+                //Found existig GeoGroup, so return existing GeoGroup ID
                 return $geoGroup->id;
             }
         }
 
         //Not found existing GeoGroup, so create new GeoGroup
 
-        //make description for aws_cloudfront_distributions
-        $description = "";
-        if ($isBlacklist)
-            $description .= "Block: ";
-        else
-            $description .= "Allow: ";
-        foreach($countryIDList as $countryID){
-            $description .= Country::find($countryID)->code . ' ';  
-        }
+        ////aws sdk to create aws_cloudfront_distributions
+        $distributionResult = $this->_createCloudFrontDistribution($countryIDList, $isBlacklist);
 
-        //TODO --aws web requet to create aws_cloudfront_distributions
-        //TODO --create new aws_cloudfront_distributions
+        ////create new aws_cloudfront_distributions
         $data = [
-            'dist_id' => 'EY93EFIEF', //TODO
-            'description' => $description, //TODO
-            'domain_name' => 'test domainname', //TODO
-            'alt_domain_name' => 'test alt domainname',//TODO
-            'origin' => 'aws.efewef', //TODO,
+            'dist_id' => $distributionResult["ID"],
+            'description' => $distributionResult["Description"],
+            'domain_name' => $distributionResult["DomainName"],
+            'alt_domain_name' => $distributionResult["AltDomainName"],
+            'origin' => $distributionResult["Origins"],
         ]; 
         $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);
                             
-        //TODO --create new geogroup with aws_cloudfront_distributions.id
+        ////create new geogroup with aws_cloudfront_distributions.id
         $newGeoGroup = GeoGroup::create([
             'is_blacklist' => $isBlacklist,
             'is_global' => false,
             'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
         ]);
-        //TODO --create new country_geo_group_maps with geogroup.id and countryIDList
+
+        ////create new country_geo_group_maps with geogroup.id and countryIDList
         $addData = [];
         foreach($countryIDList as $country){
             $addData[] = [
@@ -329,33 +346,159 @@ class VideoController extends Controller
         return $newGeoGroup->id;
     }
 
+    function _createCloudFrontDistribution($countryIDList, $isBlacklist)
+    {
+        
+        $s3BucketURL = env('AWS_S3_DESTINATION_BUCKET').'.s3.'.env('AWS_DEFAULT_REGION', 'us-east-1').'.amazonaws.com';
+        $originName = $s3BucketURL;
+        $uuid = (string)Str::uuid();
+        $callerReference = config('app.name').$uuid;
+        $defaultCacheBehavior = [
+            'AllowedMethods' => [
+                'CachedMethods' => [
+                    'Items' => ['HEAD', 'GET'],
+                    'Quantity' => 2
+                ],
+                'Items' => ['HEAD', 'GET'],
+                'Quantity' => 2
+            ],
+            'Compress' => false,
+            'DefaultTTL' => 0,
+            'FieldLevelEncryptionId' => '',
+            'ForwardedValues' => [
+                'Cookies' => [
+                    'Forward' => 'none'
+                ],
+                'Headers' => [
+                    'Quantity' => 0
+                ],
+                'QueryString' => false,
+                'QueryStringCacheKeys' => [
+                    'Quantity' => 0
+                ]
+            ],
+            'LambdaFunctionAssociations' => ['Quantity' => 0],
+            'MaxTTL' => 0,
+            'MinTTL' => 0,
+            'SmoothStreaming' => false,
+            'TargetOriginId' => $originName,
+            'TrustedSigners' => [
+                'Enabled' => false,
+                'Quantity' => 0
+            ],
+            'ViewerProtocolPolicy' => 'allow-all'
+        ];
+        $enabled = false;
+        $origin = [
+            'Items' => [
+                [
+                    'DomainName' => $s3BucketURL,
+                    'Id' => $originName,
+                    'OriginPath' => '',
+                    'CustomHeaders' => ['Quantity' => 0],
+                    'S3OriginConfig' => ['OriginAccessIdentity' => '']
+                ]
+            ],
+            'Quantity' => 1
+        ];
+
+
+        //make description and geoRestriction Country List
+        $geoRestrictionItems = [];
+        $description = "";
+        if ($isBlacklist)
+            $description .= "Block: ";
+        else
+            $description .= "Allow: ";
+        foreach($countryIDList as $countryID){
+            $country = Country::find($countryID);
+            if($country){
+                $code = $country->code;
+                $description .= $code . ' ';  
+                $geoRestrictionItems[] = $code;
+            }
+        }
+
+        $geoRestriction = [
+            'GeoRestriction' => [
+                'Items' => $geoRestrictionItems,
+                'Quantity' => count($geoRestrictionItems),
+                'RestrictionType' => $isBlacklist ? 'blacklist' : 'whitelist'
+            ]
+        ];
+
+        $distribution = [
+            'CallerReference' => $callerReference,
+            'Comment' => $description,
+            'DefaultCacheBehavior' => $defaultCacheBehavior,
+            'Enabled' => $enabled,
+            'Origins' => $origin,
+            'Restrictions' => $geoRestriction
+        ];
+
+        $cloudFrontClient = \AWS::createClient('CloudFront');
+        try {
+            $result = $cloudFrontClient->createDistribution([
+                'DistributionConfig' => $distribution
+            ]);
+
+            if (isset($result['Distribution']))
+            {
+                $resultData = [
+                    "ID" => $result['Distribution']["Id"],
+                    "Description" => $result['Distribution']["DistributionConfig"]["Comment"],
+                    "DomainName" => $result['Distribution']["DomainName"],
+                    "AltDomainName" => '',
+                    "Origins" => $result['Distribution']["DistributionConfig"]["DefaultCacheBehavior"]["TargetOriginId"],
+
+                ];
+                return $resultData;
+            }
+            return [];
+        } catch (AwsException $e) {
+            return [];
+        }
+    }
+
     public function test(Request $request)
     {
  
-        $geoGroupID = 0;
-        if($request->white_list == null && $request->black_list == null){
-            //global geo_group
-            $globalGeoGroup = GeoGroup::where('is_global', true)->first();
-            if($globalGeoGroup)
-                $geoGroupID = $globalGeoGroup->id;
-        }
-        else if($request->black_list != null){
-            //process black list
-            $countryIDList = json_decode($request->black_list);
-            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
-        }
-        else if($request->white_list != null){
-            //process white list
-            $countryIDList = json_decode($request->white_list);
-            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
-        }
-        //TODO process video with geoGroupID
+        // $geoGroupID = 0;
+        // if($request->white_list == null && $request->black_list == null){
+        //     //global geo_group
+        //     $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+        //     if($globalGeoGroup)
+        //         $geoGroupID = $globalGeoGroup->id;
+        // }
+        // else if($request->black_list != null){
+        //     //process black list
+        //     $countryIDList = json_decode($request->black_list);
+        //     $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+        // }
+        // else if($request->white_list != null){
+        //     //process white list
+        //     $countryIDList = json_decode($request->white_list);
+        //     $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+        // }
+        // //TODO process video with geoGroupID
 
-        return response()->json([
-            "result" => "test",
-            "result1" => $request->white_list,
-            "result2" => $request->black_list,
-            "geogroupID" => $geoGroupID
-        ]);
+        // return response()->json([
+        //     "result" => "test",
+        //     "result1" => $request->white_list,
+        //     "result2" => $request->black_list,
+        //     "geogroupID" => $geoGroupID
+        // ]);
+
+        // $s3 = App::make('aws')->createClient('s3');
+        // $s3->putObject(array(
+        //     'Bucket'     => 'aws-vod-source71e471f1-1xfelzhg0awdt',
+        //     'Key'        => 'YOUR_OBJECT_KEY',
+        //     'SourceFile' => 'C:\Users\admin\Documents\test.png',
+            
+        // ));
+
+        //Test
+        // var_dump($this->_createCloudFrontDistribution([1,2,3], true));
+        
     }
 }

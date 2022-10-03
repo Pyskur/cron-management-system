@@ -19,5 +19,9 @@ class GeoGroup extends Model
     {
         return $this->belongsToMany(Country::class, 'country_geo_group_maps');
     }
+    public function awsCloudfrontDistribution()
+    {
+        return $this->belongsTo(AwsCloudfrontDistribution::class);
+    }
 
 }

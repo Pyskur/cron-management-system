@@ -24,5 +24,11 @@ class Video extends Model
         'out_url',
         'out_folder',
         'out_folder_size',
+        'geo_group_id'
     ];
+
+    public function geoGroup()
+    {
+        return $this->belongsTo(GeoGroup::class);
+    }
 }

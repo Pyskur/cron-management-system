@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('videos', function (Blueprint $table) {
-            $table->foreignId('geo_group_id')->constrained();
+            $table->foreignId('geo_group_id')->constrained()->after('user_id');
         });
     }
 
@@ -27,6 +27,7 @@ return new class extends Migration
     {
         Schema::table('videos', function (Blueprint $table) {
             $table->dropForeign(['geo_group_id']);
+            $table->dropColumn('geo_group_id');
         });
     }
 };

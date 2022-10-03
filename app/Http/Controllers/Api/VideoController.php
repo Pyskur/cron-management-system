@@ -332,7 +332,7 @@ class VideoController extends Controller
             'dist_id' => $distributionResult["ID"],
             'description' => $distributionResult["Description"],
             'domain_name' => $distributionResult["DomainName"],
-            'alt_domain_name' => $distributionResult["AltDomainName"],
+            'alt_domain_name' => $newDomainName,
             'origin' => $distributionResult["Origins"],
         ]; 
         $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);

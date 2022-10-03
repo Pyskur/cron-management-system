@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Models\UsersCompanies;
+use App\Models\UsersGroups;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -121,8 +122,13 @@ class UsersCompaniesController extends Controller
         }
 
         try {
-            $user_company = UsersCompanies::create($input);
-            return response()->json($user_company);
+            $companies = array();
+            $users = UsersGroups::where('group_id', $input['group_id'])->pluck('user_id');
+            foreach($users as $user)
+            {
+                $companies[] = UsersCompanies::create(['user_id' => $user, 'company_id' => $input['company_id']]);
+            }
+            return response()->json($companies);
         } catch (\Exception $e) {
             if (App::environment('local')) {
                 $message = $e->getMessage();

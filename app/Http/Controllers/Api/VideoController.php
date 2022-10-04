@@ -198,6 +198,14 @@ class VideoController extends Controller
             $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
         }
 
+        if( $geoGroupID == 0){
+            //no global GeoGroup table
+            return response()->json([
+                "error" => "Error",
+                "code" =>  0,
+                "message" => "Cannot upload video. Global GeoGroup NOT Found."
+            ]);
+        }
 
         //insert video table
         $newVideo = [
@@ -630,6 +638,41 @@ class VideoController extends Controller
             return [];
         }
     }
+    public function initTable(Request $request)
+    {
+        $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+        if($globalGeoGroup){
+            return response()->json([
+                "type" => "Failed",
+                "result" => 'There is already global GeoGroup table.'
+            ]);
+        }
+        else{
+            $data = [
+                'dist_id' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ID'),
+                'description' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DESCRIPTION'),
+                'domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DOMAINNAME'),
+                'alt_domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ALTDOMAINNAME'),
+                'origin' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ORIGIN'),
+            ]; 
+            $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);
+
+            $newGeoGroup = GeoGroup::create([
+                'is_blacklist' => false,
+                'is_global' => true,
+                'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
+            ]);
+            return response()->json([
+                "type" => "Success",
+                "result" => 'Init Process is finished successfully.',
+                "data"=>[
+                    "global_geo_group_id" => $newGeoGroup->id,
+                    "global_aws_cloudfront_distribution_id" => $newAwsCloudfrontDistribution->id
+                ]
+            ]);
+        }
+
+    }
     public function test(Request $request)
     {
 
@@ -639,4 +682,5 @@ class VideoController extends Controller
         // $cloudFrontClient = \AWS::createClient('CloudFront');
         // var_dump($this->_getDistributionConfig($cloudFrontClient, "EY6CESNM58DSQ"));
     }
+
 }

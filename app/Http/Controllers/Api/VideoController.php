@@ -349,6 +349,7 @@ class VideoController extends Controller
         $newGeoGroup = GeoGroup::create([
             'is_blacklist' => $isBlacklist,
             'is_global' => false,
+            'uuid'=> (string) Str::uuid(),
             'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
         ]);
 
@@ -590,6 +591,8 @@ class VideoController extends Controller
             ];          
         }
 
+        $currentConfig['DistributionConfig']["Origins"]["Items"][0]["OriginPath"] = "/".$distributionID;
+
         $distributionConfig = [
             'Aliases' => [
                 'Items' => [$altDomainName],
@@ -660,6 +663,7 @@ class VideoController extends Controller
             $newGeoGroup = GeoGroup::create([
                 'is_blacklist' => false,
                 'is_global' => true,
+                'uuid'=> (string) Str::uuid(),
                 'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
             ]);
             return response()->json([
@@ -678,7 +682,7 @@ class VideoController extends Controller
 
         //Test
         // var_dump($this->_addCustomDomain("dotvk0avcnmxl.cloudfront.net"));
-        var_dump($this->_updateCloudfrontDistributionWithAlias("E35IFL7A49UVRY", 'd87cc77a47ba495b9c9a3ac223d8c8d6.cdn.veri.app'));
+        // var_dump($this->_updateCloudfrontDistributionWithAlias("E35IFL7A49UVRY", 'd87cc77a47ba495b9c9a3ac223d8c8d6.cdn.veri.app'));
         // $cloudFrontClient = \AWS::createClient('CloudFront');
         // var_dump($this->_getDistributionConfig($cloudFrontClient, "EY6CESNM58DSQ"));
     }

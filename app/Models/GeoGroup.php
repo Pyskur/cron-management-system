@@ -12,6 +12,7 @@ class GeoGroup extends Model
     protected $fillable = [
         'is_blacklist',
         'is_global',
+        'uuid',
         'aws_cloudfront_distribution_id'
     ];
 

@@ -249,9 +249,9 @@ class VideoController extends Controller
     {
         $data = $request->json()->all();
         //Only for Test
-        // Test::create([
-        //     'data' => json_encode($request->json()->all())
-        // ]);
+        Test::create([
+            'data' => json_encode($request->json()->all())
+        ]);
         if($data == null || !array_key_exists('Type', $data)){
             return response()->json([
                 "type" => "Error",

@@ -70,6 +70,8 @@ Route::apiResource('country', CountryController::class);
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::post('videos/test', [VideoController::class, 'test']);
+Route::post('videos/init-table', [VideoController::class, 'initTable']);
+
 Route::apiResource('sms', SmsController::class);
 
 Route::get('report/daily_report', [ReportController::class, 'daily_report']);

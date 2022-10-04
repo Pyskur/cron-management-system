@@ -274,8 +274,8 @@ class VideoController extends Controller
             $message = json_decode($data["Message"]);
             $outputURL = $message->Outputs->HLS_GROUP[0];
             $tokens = explode("/", $outputURL);
-            $outFolder = $tokens[3];
-            $uuid = explode(".", $tokens[5])[0];
+            $outFolder = $tokens[3]."/".$tokens[4];
+            $uuid = explode(".", $tokens[6])[0];
             $video = Video::where('uuid', $uuid)->first();
             if($video == null){
                 return response()->json([

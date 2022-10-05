@@ -17,6 +17,11 @@ use App\Models\CountryGeoGroupMap;
 use App\Models\Country;
 class VideoController extends Controller
 {
+    const VIDEO_STATUS_CREATED = 0;
+    const VIDEO_STATUS_UPLOADED = 1;
+    const VIDEO_STATUS_AVAILABLE = 2;
+    const VIDEO_STATUS_EXPIRED = 3;
+
     /**
      * Display a listing of the resource.
      *
@@ -43,9 +48,7 @@ class VideoController extends Controller
             'filename' => 'required|string',
             'status' => 'required|numeric',
             'file_size' => 'required|string|max:45',
-            'geo_restrict' => 'required|numeric',
             'thumbnail' => 'required|string|max:45',
-            'parent_name' => 'required|string|max:45',
             'url' => 'required|string',
             'drm_enabled' => 'required|numeric',
             'user_id' => 'required|numeric'
@@ -162,7 +165,10 @@ class VideoController extends Controller
         $input = $request->all();
         $validator = Validator::make($input, [
             'title'=> 'required|string',
-            'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi'
+            'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
+            'expire_time' => 'date_format:Y-m-d H:i:s',
+            'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
+            'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
         ]);
 
         if($validator->fails()){
@@ -211,11 +217,12 @@ class VideoController extends Controller
         $newVideo = [
             'title' => $request->title,
             'filename' => $fileName,
-            'status' => 1, //uploading
+            'status' => self::VIDEO_STATUS_CREATED,
             'file_size' => $fileSize,
             'user_id' => 1, //TODO,
             'uuid'=> $uuid,
-            'geo_group_id' => $geoGroupID
+            'geo_group_id' => $geoGroupID,
+            'expire_time'=> $request->expire_time
         ];
         $video = Video::create($newVideo);
 
@@ -228,7 +235,7 @@ class VideoController extends Controller
         if($result){
             //Success uploading
            $video->update([
-                'status' => 2, // Encoding
+                'status' => self::VIDEO_STATUS_UPLOADED, // Encoding
                 'src_url' => $path
            ]);
 
@@ -291,7 +298,7 @@ class VideoController extends Controller
             $outFolderSizeResponse = Http::get($getFolderSizeUrl);
             $sizeData = $outFolderSizeResponse->json();
             $video->update([
-                'status' => 3, // Available
+                'status' => self::VIDEO_STATUS_AVAILABLE,
                 'out_url' => $outputURL,
                 'out_folder' => $outFolder,
                 'out_folder_size' => $sizeData["statusCode"] == 200 ? $sizeData["data"]["size"] : 0,
@@ -677,14 +684,62 @@ class VideoController extends Controller
         }
 
     }
+    public function getStatus(Video $video)
+    {
+        $statusText = "";
+        if($video->status == self::VIDEO_STATUS_CREATED)
+            $statusText = "CREATED";
+        else if($video->status == self::VIDEO_STATUS_UPLOADED)
+            $statusText = "UPLOADED";
+        else if($video->status == self::VIDEO_STATUS_AVAILABLE)
+            $statusText = "AVAILABLE";
+        
+
+
+        if($video->isExpired()){
+            $statusText = "EXPIRED";
+        }
+       
+        return response()->json([
+            'id' => $video->id,
+            'statusCode' => $video->status,
+            'statusText' => $statusText
+        ]);
+    }
+
+    public function getPlaybackUrl(Video $video)
+    {
+        if(!$video->isExpired()){
+            return $video->out_url;
+        }
+        else
+            return "expired";
+    }
+
     public function test(Request $request)
     {
 
         //Test
-        // var_dump($this->_addCustomDomain("dotvk0avcnmxl.cloudfront.net"));
-        // var_dump($this->_updateCloudfrontDistributionWithAlias("E35IFL7A49UVRY", 'd87cc77a47ba495b9c9a3ac223d8c8d6.cdn.veri.app'));
-        // $cloudFrontClient = \AWS::createClient('CloudFront');
-        // var_dump($this->_getDistributionConfig($cloudFrontClient, "EY6CESNM58DSQ"));
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'title'=> 'required|string',
+            'expire_time' => 'date_format:Y-m-d H:i:s',
+            'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
+            'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+        return response()->json([
+            "result" => "success",
+            "data" =>$input,
+            "d" =>self::VIDEO_STATUS_UPLOADING
+        ]);
     }
 
 }

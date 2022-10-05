@@ -24,11 +24,22 @@ class Video extends Model
         'out_url',
         'out_folder',
         'out_folder_size',
-        'geo_group_id'
+        'geo_group_id',
+        'expire_time'
     ];
 
     public function geoGroup()
     {
         return $this->belongsTo(GeoGroup::class);
+    }
+    public function isExpired()
+    {
+        if($this->expire_time){
+            $now = new \DateTime("now");
+            $expireTime = new \DateTime($this->expire_time);
+            if($expireTime < $now)
+                return true;
+        }
+        return false;
     }
 }

@@ -256,9 +256,10 @@ class VideoController extends Controller
     {
         $data = $request->json()->all();
         //Only for Test
-        Test::create([
-            'data' => json_encode($request->json()->all())
-        ]);
+        // Test::create([
+        //     'data' => json_encode($request->json()->all())
+        // ]);
+        
         if($data == null || !array_key_exists('Type', $data)){
             return response()->json([
                 "type" => "Error",
@@ -297,6 +298,13 @@ class VideoController extends Controller
             $getFolderSizeUrl = "{$apiUrl}?bucketName={$apiBucketName}&folderPath={$outFolder}";
             $outFolderSizeResponse = Http::get($getFolderSizeUrl);
             $sizeData = $outFolderSizeResponse->json();
+
+            //replace distribution url of public cdn url
+            $originDomainName = $video->geoGroup->awsCloudfrontDistribution->domain_name;
+            $cdnDomainName = $video->geoGroup->awsCloudfrontDistribution->alt_domain_name;
+            $outputURL = str_replace($originDomainName, $cdnDomainName, $outputURL);
+
+            //update video table with out result information
             $video->update([
                 'status' => self::VIDEO_STATUS_AVAILABLE,
                 'out_url' => $outputURL,

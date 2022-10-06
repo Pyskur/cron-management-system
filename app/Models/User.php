@@ -25,7 +25,8 @@ class User extends Authenticatable
         'last_name',
         'company_id',
         'country_id',
-        'phone'
+        'phone',
+        'stripe_cust_id',
     ];
 
     /**
@@ -46,4 +47,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function auto_renew()
+    {
+        return $this->belongsTo(AutoRenew::class);
+    }
 }

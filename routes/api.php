@@ -71,6 +71,10 @@ Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::post('videos/test', [VideoController::class, 'test']);
 Route::post('videos/init-table', [VideoController::class, 'initTable']);
+Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
+Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);
+
+
 
 Route::apiResource('sms', SmsController::class);
 

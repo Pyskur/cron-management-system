@@ -256,9 +256,10 @@ class VideoController extends Controller
     {
         $data = $request->json()->all();
         //Only for Test
-        Test::create([
-            'data' => json_encode($request->json()->all())
-        ]);
+        // Test::create([
+        //     'data' => json_encode($request->json()->all())
+        // ]);
+        
         if($data == null || !array_key_exists('Type', $data)){
             return response()->json([
                 "type" => "Error",
@@ -297,6 +298,21 @@ class VideoController extends Controller
             $getFolderSizeUrl = "{$apiUrl}?bucketName={$apiBucketName}&folderPath={$outFolder}";
             $outFolderSizeResponse = Http::get($getFolderSizeUrl);
             $sizeData = $outFolderSizeResponse->json();
+
+            //replace distribution url of public cdn url
+            $cdnDomainName = $video->geoGroup->awsCloudfrontDistribution->alt_domain_name;
+            $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+            if($globalGeoGroup == null){
+                return response()->json([
+                    "type" => "Error",
+                    "result" => "Unknown uuid from Notification"
+                ]);
+                
+            }
+            $originPrefix = $globalGeoGroup->awsCloudfrontDistribution->domain_name."/".$video->geoGroup->awsCloudfrontDistribution->dist_id;
+            $outputURL = str_replace($originPrefix, $cdnDomainName, $outputURL);
+
+            //update video table with out result information
             $video->update([
                 'status' => self::VIDEO_STATUS_AVAILABLE,
                 'out_url' => $outputURL,
@@ -598,7 +614,17 @@ class VideoController extends Controller
             ];          
         }
 
+        $globalDistConfig = $this->_getDistributionConfig($cloudFrontClient, env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ID'));
+        if (array_key_exists('Error', $globalDistConfig)) {
+            return [
+                "Error" => $globalDistConfig['Error']
+            ];          
+        }
+
+        $globalS3OriginConfig = $globalDistConfig["DistributionConfig"]["Origins"]["Items"][0]["S3OriginConfig"];
+
         $currentConfig['DistributionConfig']["Origins"]["Items"][0]["OriginPath"] = "/".$distributionID;
+        $currentConfig['DistributionConfig']["Origins"]["Items"][0]["S3OriginConfig"] = $globalS3OriginConfig;
 
         $distributionConfig = [
             'Aliases' => [
@@ -720,26 +746,6 @@ class VideoController extends Controller
     {
 
         //Test
-        $input = $request->all();
-        $validator = Validator::make($input, [
-            'title'=> 'required|string',
-            'expire_time' => 'date_format:Y-m-d H:i:s',
-            'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
-            'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-        return response()->json([
-            "result" => "success",
-            "data" =>$input,
-            "d" =>self::VIDEO_STATUS_UPLOADING
-        ]);
     }
 
 }

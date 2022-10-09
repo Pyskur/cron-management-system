@@ -17,7 +17,8 @@ class CountryController extends Controller
      */
     public function index()
     {
-        //
+        $countries = Country::all();
+        return response()->json($countries);
     }
 
     /**
@@ -28,7 +29,37 @@ class CountryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'name' => 'required|string|max:50',
+            'code' => 'required|string|size:2',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $country = Country::create($input);
+            return response()->json($country);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "Country store error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
     }
 
     /**
@@ -39,7 +70,8 @@ class CountryController extends Controller
      */
     public function show(Country $country)
     {
-        //
+        return response()->json($country);
+
     }
 
     /**
@@ -51,7 +83,37 @@ class CountryController extends Controller
      */
     public function update(Request $request, Country $country)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'name' => 'string|max:50',
+            'code' => 'string|size:2',
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $country->update($input);
+            return response()->json($country);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "Country update error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
     }
 
     /**
@@ -62,6 +124,7 @@ class CountryController extends Controller
      */
     public function destroy(Country $country)
     {
-        //
+        $country->delete();
+        return response()->json();
     }
 }

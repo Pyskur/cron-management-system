@@ -65,7 +65,7 @@ Route::apiResource('http_settings', HttpSettingController::class);
 Route::apiResource('limits', LimitController::class);
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('videos', VideoController::class);
-Route::apiResource('country', CountryController::class);
+Route::apiResource('countries', CountryController::class);
 
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);

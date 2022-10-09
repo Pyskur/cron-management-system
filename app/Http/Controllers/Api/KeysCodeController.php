@@ -100,7 +100,7 @@ class KeysCodeController extends Controller
         }
 
         try {
-            // $keysCode->update($input);
+            $keysCode->update($input);
             return response()->json($keysCode);
         } catch (\Exception $e) {
             if (App::environment('local')) {

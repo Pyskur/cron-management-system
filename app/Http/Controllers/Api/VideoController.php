@@ -41,43 +41,6 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
- 
-        $validator = Validator::make($input, [
-            'title' => 'required|string',
-            'filename' => 'required|string',
-            'status' => 'required|numeric',
-            'file_size' => 'required|string|max:45',
-            'thumbnail' => 'required|string|max:45',
-            'out_url' => 'required|string',
-            'drm_enabled' => 'required|numeric',
-            'user_id' => 'required|numeric'
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $video = Video::create($input);
-            return response()->json($video);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Video store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -110,7 +73,7 @@ class VideoController extends Controller
             'thumbnail' => 'nullable|string|max:45',
             'out_url' => 'nullable|string',
             'drm_enabled' => 'nullable|numeric',
-            'expire_time' => 'date_format:Y-m-d H:i:s',
+            'unpublish_date' => 'date_format:Y-m-d H:i:s',
         ]);
 
         if($validator->fails()){
@@ -164,7 +127,8 @@ class VideoController extends Controller
         $validator = Validator::make($input, [
             'title'=> 'required|string',
             'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
-            'expire_time' => 'date_format:Y-m-d H:i:s',
+            'publish_date' => 'date_format:Y-m-d H:i:s',
+            'unpublish_date' => 'date_format:Y-m-d H:i:s',
             'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
             'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
         ]);
@@ -220,7 +184,8 @@ class VideoController extends Controller
             'user_id' => 1, //TODO,
             'uuid'=> $uuid,
             'geo_group_id' => $geoGroupID,
-            'expire_time'=> $request->expire_time
+            'publish_date'=> $request->publish_date,
+            'unpublish_date'=> $request->unpublish_date
         ];
         $video = Video::create($newVideo);
 
@@ -743,7 +708,7 @@ class VideoController extends Controller
 
     public function getPlaybackUrl(Video $video)
     {
-        if(!$video->isExpired()){
+        if($video->isPublished() && !$video->isExpired()){
             return $video->out_url;
         }
         else

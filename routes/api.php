@@ -97,3 +97,4 @@ Route::get('payments/test', [PaymentController::class, 'test']);
 Route::get('payments/pay', [PaymentController::class, 'pay']);
 Route::get('payments/temp', [PaymentController::class, 'temp']);
 Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
+Route::get('payments/ipn', [PaymentController::class, 'ipn']);

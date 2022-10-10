@@ -25,19 +25,33 @@ class Video extends Model
         'out_folder',
         'out_folder_size',
         'geo_group_id',
-        'expire_time'
+        'publish_date',
+        'unpublish_date',
+        'thumbnail_count'
     ];
 
     public function geoGroup()
     {
         return $this->belongsTo(GeoGroup::class);
     }
+    public function isPublished()
+    {
+        if($this->publish_date){
+            $now = new \DateTime("now");
+            $publishDate = new \DateTime($this->publish_date);
+            if($publishDate >= $now)
+                return true;
+            else
+                return false;
+        }
+        return true;
+    }
     public function isExpired()
     {
-        if($this->expire_time){
+        if($this->unpublish_date){
             $now = new \DateTime("now");
-            $expireTime = new \DateTime($this->expire_time);
-            if($expireTime < $now)
+            $unPublishDate = new \DateTime($this->unpublish_date);
+            if($unPublishDate < $now)
                 return true;
         }
         return false;

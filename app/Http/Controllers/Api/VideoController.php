@@ -41,43 +41,6 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
- 
-        $validator = Validator::make($input, [
-            'title' => 'required|string',
-            'filename' => 'required|string',
-            'status' => 'required|numeric',
-            'file_size' => 'required|string|max:45',
-            'thumbnail' => 'required|string|max:45',
-            'url' => 'required|string',
-            'drm_enabled' => 'required|numeric',
-            'user_id' => 'required|numeric'
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $video = Video::create($input);
-            return response()->json($video);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Video store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -107,12 +70,10 @@ class VideoController extends Controller
             'filename' => 'nullable|string',
             'status' => 'nullable|numeric',
             'file_size' => 'nullable|string|max:45',
-            'geo_restrict' => 'nullable|numeric',
             'thumbnail' => 'nullable|string|max:45',
-            'parent_name' => 'nullable|string|max:45',
-            'url' => 'nullable|string',
+            'out_url' => 'nullable|string',
             'drm_enabled' => 'nullable|numeric',
-            'user_id' => 'nullable|numeric'
+            'unpublish_date' => 'date_format:Y-m-d H:i:s',
         ]);
 
         if($validator->fails()){
@@ -149,8 +110,31 @@ class VideoController extends Controller
      */
     public function destroy(Video $video)
     {
+        //delete src s3 bucket source file
+        $srcUrl = $video->src_url;
+        $srcUrlTokens = explode("/", $srcUrl);
+        $s3Url = implode("/", array_slice($srcUrlTokens, 3));
+        $results3 = false;
+        if(Storage::disk('s3')->exists($s3Url)) {
+            $result = Storage::disk('s3')->delete($s3Url);
+        }
+
+        //delete dest s3 bucket output folder
+        $s3Url = $video->out_folder;
+        $results3dest = false;
+        if(Storage::disk('s3-dest')->exists($s3Url)) {
+            $results3dest = Storage::disk('s3-dest')->deleteDirectory($s3Url);
+        }
+
+        //delete table
         $video->delete();
-        return response()->json();
+        return response()->json(
+            [
+                "result" =>  true,
+                "results3" =>$results3,
+                "results3dest" =>$results3dest
+            ]
+        );
     }
 
     /**
@@ -166,7 +150,8 @@ class VideoController extends Controller
         $validator = Validator::make($input, [
             'title'=> 'required|string',
             'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
-            'expire_time' => 'date_format:Y-m-d H:i:s',
+            'publish_date' => 'date_format:Y-m-d H:i:s',
+            'unpublish_date' => 'date_format:Y-m-d H:i:s',
             'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
             'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
         ]);
@@ -222,7 +207,8 @@ class VideoController extends Controller
             'user_id' => 1, //TODO,
             'uuid'=> $uuid,
             'geo_group_id' => $geoGroupID,
-            'expire_time'=> $request->expire_time
+            'publish_date'=> $request->publish_date,
+            'unpublish_date'=> $request->unpublish_date
         ];
         $video = Video::create($newVideo);
 
@@ -312,12 +298,22 @@ class VideoController extends Controller
             $originPrefix = $globalGeoGroup->awsCloudfrontDistribution->domain_name."/".$video->geoGroup->awsCloudfrontDistribution->dist_id;
             $outputURL = str_replace($originPrefix, $cdnDomainName, $outputURL);
 
+
+            $thumbnailUrl = $message->Outputs->THUMB_NAILS[0];
+            $thumbnailTokens = explode(".", $thumbnailUrl);
+            $thumbnailCountText = array_slice($thumbnailTokens, -2, 1);
+            $thumbnailCount = intval($thumbnailCountText);
+            $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad(intval($thumbnailCount / 2), 7, '0', STR_PAD_LEFT);
+            $thumbnailUrl = implode(".", $thumbnailTokens);
+
             //update video table with out result information
             $video->update([
                 'status' => self::VIDEO_STATUS_AVAILABLE,
                 'out_url' => $outputURL,
                 'out_folder' => $outFolder,
                 'out_folder_size' => $sizeData["statusCode"] == 200 ? $sizeData["data"]["size"] : 0,
+                'thumbnail' => $thumbnailUrl,
+                'thumbnail_count' => $thumbnailCount
             ]);
 
             return response()->json([
@@ -735,7 +731,7 @@ class VideoController extends Controller
 
     public function getPlaybackUrl(Video $video)
     {
-        if(!$video->isExpired()){
+        if($video->isPublished() && !$video->isExpired()){
             return $video->out_url;
         }
         else
@@ -746,6 +742,13 @@ class VideoController extends Controller
     {
 
         //Test
+        $path = "EY6CESNM58DSQ/2f1516b2-04a4-427b-97b3-a3d7e0c0fdd4";
+        if(Storage::disk('s3-dest')->exists($path)) {
+            $result = Storage::disk('s3-dest')->deleteDirectory($path);
+            var_dump($result);
+            return "d";
+        }
+        return "done";
     }
 
 }

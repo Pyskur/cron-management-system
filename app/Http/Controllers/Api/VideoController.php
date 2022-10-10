@@ -110,8 +110,31 @@ class VideoController extends Controller
      */
     public function destroy(Video $video)
     {
+        //delete src s3 bucket source file
+        $srcUrl = $video->src_url;
+        $srcUrlTokens = explode("/", $srcUrl);
+        $s3Url = implode("/", array_slice($srcUrlTokens, 3));
+        $results3 = false;
+        if(Storage::disk('s3')->exists($s3Url)) {
+            $result = Storage::disk('s3')->delete($s3Url);
+        }
+
+        //delete dest s3 bucket output folder
+        $s3Url = $video->out_folder;
+        $results3dest = false;
+        if(Storage::disk('s3-dest')->exists($s3Url)) {
+            $results3dest = Storage::disk('s3-dest')->deleteDirectory($s3Url);
+        }
+
+        //delete table
         $video->delete();
-        return response()->json();
+        return response()->json(
+            [
+                "result" =>  true,
+                "results3" =>$results3,
+                "results3dest" =>$results3dest
+            ]
+        );
     }
 
     /**
@@ -719,6 +742,13 @@ class VideoController extends Controller
     {
 
         //Test
+        $path = "EY6CESNM58DSQ/2f1516b2-04a4-427b-97b3-a3d7e0c0fdd4";
+        if(Storage::disk('s3-dest')->exists($path)) {
+            $result = Storage::disk('s3-dest')->deleteDirectory($path);
+            var_dump($result);
+            return "d";
+        }
+        return "done";
     }
 
 }

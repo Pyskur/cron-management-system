@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Validator;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class PaymentController extends Controller
 {
@@ -177,6 +178,47 @@ class PaymentController extends Controller
             // $msgType = 'error';
             // $msg = "Something went wrong. Please refresh page or try again after some time.";
         }
+    }
+
+    public function ipn(Request $request)
+    {
+      //paypal return transaction details array
+      $paypalInfo = $request->all();
+      $data['user_id'] = $paypalInfo['custom'];
+      $data['txn_id'] = $paypalInfo["txn_id"];
+      $data['payment_gross'] = $paypalInfo["mc_gross"];
+      $data['currency_code'] = $paypalInfo["mc_currency"];
+      $data['payer_email'] = $paypalInfo["payer_email"];
+      $data['payment_status'] = $paypalInfo["payment_status"];
+      
+      // $paypalURL = $this->paypal_lib->paypal_url;
+      // $result = $this->paypal_lib->curlPost($paypalURL, $paypalInfo);
+      //check whether the payment is verified
+
+      $sanbox = env('PAYPAL_MODE');
+      $paypal_url = ($sanbox == 'sandbox')?'https://www.sandbox.paypal.com/cgi-bin/webscr':'https://www.paypal.com/cgi-bin/webscr';
+
+      $req = 'cmd=_notify-validate';
+      foreach($paypalInfo as $key => $value) 
+      {
+        $value = urlencode(stripslashes($value));
+        $req .= "&$key=$value";
+      }
+        
+      $ipnsiteurl=$paypal_url;
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $ipnsiteurl);
+      curl_setopt($ch, CURLOPT_HEADER, false);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
+      $result = curl_exec($ch);
+      curl_close($ch);
+
+      if (preg_match("/VERIFIED/i", $result)) {
+        //insert the transaction data into the database
+        // $this->insert_model->storePaypalTransaction($data);
+      }
     }
 
     public function test()

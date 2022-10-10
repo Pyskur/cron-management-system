@@ -49,7 +49,7 @@ class VideoController extends Controller
             'status' => 'required|numeric',
             'file_size' => 'required|string|max:45',
             'thumbnail' => 'required|string|max:45',
-            'url' => 'required|string',
+            'out_url' => 'required|string',
             'drm_enabled' => 'required|numeric',
             'user_id' => 'required|numeric'
         ]);
@@ -107,12 +107,10 @@ class VideoController extends Controller
             'filename' => 'nullable|string',
             'status' => 'nullable|numeric',
             'file_size' => 'nullable|string|max:45',
-            'geo_restrict' => 'nullable|numeric',
             'thumbnail' => 'nullable|string|max:45',
-            'parent_name' => 'nullable|string|max:45',
-            'url' => 'nullable|string',
+            'out_url' => 'nullable|string',
             'drm_enabled' => 'nullable|numeric',
-            'user_id' => 'nullable|numeric'
+            'expire_time' => 'date_format:Y-m-d H:i:s',
         ]);
 
         if($validator->fails()){
@@ -312,12 +310,22 @@ class VideoController extends Controller
             $originPrefix = $globalGeoGroup->awsCloudfrontDistribution->domain_name."/".$video->geoGroup->awsCloudfrontDistribution->dist_id;
             $outputURL = str_replace($originPrefix, $cdnDomainName, $outputURL);
 
+
+            $thumbnailUrl = $message->Outputs->THUMB_NAILS[0];
+            $thumbnailTokens = explode(".", $thumbnailUrl);
+            $thumbnailCountText = array_slice($thumbnailTokens, -2, 1);
+            $thumbnailCount = intval($thumbnailCountText);
+            $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad(intval($thumbnailCount / 2), 7, '0', STR_PAD_LEFT);
+            $thumbnailUrl = implode(".", $thumbnailTokens);
+
             //update video table with out result information
             $video->update([
                 'status' => self::VIDEO_STATUS_AVAILABLE,
                 'out_url' => $outputURL,
                 'out_folder' => $outFolder,
                 'out_folder_size' => $sizeData["statusCode"] == 200 ? $sizeData["data"]["size"] : 0,
+                'thumbnail' => $thumbnailUrl,
+                'thumbnail_count' => $thumbnailCount
             ]);
 
             return response()->json([

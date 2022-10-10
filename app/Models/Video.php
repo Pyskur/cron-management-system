@@ -25,7 +25,8 @@ class Video extends Model
         'out_folder',
         'out_folder_size',
         'geo_group_id',
-        'expire_time'
+        'expire_time',
+        'thumbnail_count'
     ];
 
     public function geoGroup()

@@ -100,6 +100,85 @@ class PaymentController extends Controller
         // }
     }
 
+    public function autoRechargePayment(Request $request){
+        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+        \Stripe\Stripe::setMaxNetworkRetries(2);
+        \Stripe\Stripe::setApiKey($stripeSecret);
+
+        $userObj = User::where('api_token', $request->api_token)->first();
+        $user_id = $userObj->id;
+        $user_email=$userObj->email;
+        $token = $this->input->post('stripeToken');
+
+        $charge = \Stripe\Charge::create([
+            'amount' => $this->input->post('amount')*100,
+            'currency' => $this->config->item('stripe_currency'),
+            'description' => 'OTP Top up balance',
+            'source' => $token,
+            'receipt_email' => $user_email,
+        ]);
+        $msgType = $msg = '';
+        if($charge -> status == 'succeeded'){
+            $charge_id = $charge->id;
+            $amount_paid = $this->input->post('amount');
+            $payment_method = $charge->payment_method_details->type;
+            $receipt_email = $charge->receipt_email;
+            $currency = $charge->currency;
+            $chargeData = json_decode($charge, 1);
+            $card_id = $charge->source->id;
+            $exp_month = $charge->source->exp_month;
+            $exp_year = $charge->source->exp_year;
+            $cvc_check = $charge->source->cvc_check;
+            $last4 = $charge->source->last4;
+            $fingerprint = $charge->source->fingerprint;
+            $brand = $charge->source->brand;
+
+            //Insert transaction detail
+            $insTraData = array(
+            'user_id' => $user_id,
+            'stripe_customer_id ' => $userObj->stripe_cust_id,
+            'charge_id' => $charge_id,
+            'customer_email' => $receipt_email,
+            'amount_paid' => $amount_paid,
+            'payment_method' => $payment_method,
+            'currency' => $currency,
+            'billing_reason' => 'charge',
+            'charge_response' => json_encode($charge),
+            'charges_type' => 1,
+            'charge_status' => 'paid',
+            'created_at' => date("Y-m-d H:i:s"),
+            );
+            // $insert_id = $this->insert_model->stripe_transaction_log($insTraData);
+            //Inser Card detail
+            $insCardData = array(
+            'user_id' => $user_id,
+            'card_id' => $card_id,
+            'exp_month' => $exp_month,
+            'exp_year' => $exp_year,
+            'cvc_check' => $cvc_check,
+            'last4' => $last4,
+            'fingerprint' => $fingerprint,
+            'brand' => $brand,
+            'card_response' => json_encode($charge),
+            );
+            // $insert_id = $this->insert_model->storeCardData($insCardData);
+            // User Data Update
+            $total_balance = $userObj->balance + $this->input->post('amount');
+            $balance_update = number_format(round((float) $total_balance, 2), 2);
+            $update_array = array('balance' => $balance_update);
+            User::where('id', $user_data->id)->update($update_array);
+
+            // $msgType='success';
+            // $msg='Auto recharge payment updated successfully.';
+            // //send mail to user
+            // $subject='Auto recharge payment.';
+            // $rdata=$this->select_model->send_mail_to_user($user_email,$subject,$userObj,'',$msg);
+        } else {
+            // $msgType = 'error';
+            // $msg = "Something went wrong. Please refresh page or try again after some time.";
+        }
+    }
+
     public function test()
     {
         $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));

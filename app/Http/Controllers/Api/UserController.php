@@ -59,6 +59,13 @@ class UserController extends Controller
             ]);
         }
 
+        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+        $customer_info = $stripe->customers->create([
+            'description' => 'Veri User',
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
         $newdata = [
             'name'=> $request->name,
             'email'=> $request->email,
@@ -68,7 +75,8 @@ class UserController extends Controller
             'country_id'=> $request->country_id,
             'password'=> bcrypt($request->password),
             'phone'=> $request->phone,
-            'language'=> $request->language,
+			'language'=> $request->language,
+            'stripe_cust_id' => $customer_info->id,
         ];
 
         $user = User::create($newdata);

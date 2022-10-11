@@ -51,7 +51,6 @@ return new class extends Migration
             $table->integer('company_id')->nullable();
             $table->integer('country_id')->nullable();
             $table->integer('epd_id')->nullable();
-            $table->integer('auto_renew_id')->default(0);
             $table->string('api_token')->nullable();
   
             $table->rememberToken();

@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\UsersCompaniesController;
 use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\UsersGroupsController;
 use App\Http\Controllers\Api\UsersNotificationsController;
+use App\Http\Controllers\Api\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,7 +58,6 @@ Route::apiResource('keys_codes', KeysCodeController::class);
 Route::apiResource('keys_refs', KeysRefController::class);
 Route::apiResource('keys_smses', KeysSmsController::class);
 Route::apiResource('crons', CronController::class);
-Route::apiResource('payments', CronController::class);
 Route::apiResource('auto_renew', AutoRenewController::class);
 Route::apiResource('companies', CompanyController::class);
 Route::apiResource('epds', EpdController::class);
@@ -93,8 +93,9 @@ Route::post('users_groups/getGroups', [UsersGroupsController::class, 'getGroups'
 Route::post('users_groups/getUsers', [UsersGroupsController::class, 'getUsers']);
 Route::post('users_groups/addUsertoGroup', [UsersGroupsController::class, 'addUsertoGroup']);
 Route::post('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);
-
 Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
 Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
 Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
 Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
+Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
+Route::get('payments/ipn', [PaymentController::class, 'ipn']);

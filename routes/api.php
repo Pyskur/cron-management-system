@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UsersCompaniesController;
 use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\UsersGroupsController;
+use App\Http\Controllers\Api\UsersNotificationsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,3 +93,8 @@ Route::post('users_groups/getGroups', [UsersGroupsController::class, 'getGroups'
 Route::post('users_groups/getUsers', [UsersGroupsController::class, 'getUsers']);
 Route::post('users_groups/addUsertoGroup', [UsersGroupsController::class, 'addUsertoGroup']);
 Route::post('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);
+
+Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
+Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
+Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
+Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);

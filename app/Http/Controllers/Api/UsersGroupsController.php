@@ -68,7 +68,7 @@ class UsersGroupsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function addUsertogroup(Request $request)
+    public function addUsertoGroup(Request $request)
     {
         $input = $request->all();
 
@@ -109,7 +109,7 @@ class UsersGroupsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function deleteUserfromgroup(Request $request)
+    public function deleteUserfromGroup(Request $request)
     {
         $input = $request->all();
 

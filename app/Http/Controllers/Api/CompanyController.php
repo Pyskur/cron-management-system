@@ -38,6 +38,10 @@ class CompanyController extends Controller
             'address' => 'required|string|max:255',
             'domain' => 'required|string|max:255',
             'whitelist_ip' => 'required|string|max:255',
+            'logo' => 'required|string|max:255',
+            'color1' => 'required|string|max:10',
+            'color2' => 'required|string|max:10',
+            'color3' => 'required|string|max:10',
         ]);
         
         if($validator->fails()){
@@ -95,6 +99,10 @@ class CompanyController extends Controller
             'address' => 'string|max:255',
             'domain' => 'string|max:255',
             'whitelist_ip' => 'string|max:255',
+            'logo' => 'string|max:255',
+            'color1' => 'string|max:10',
+            'color2' => 'string|max:10',
+            'color3' => 'string|max:10',
         ]);
 
         if($validator->fails()){

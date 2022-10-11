@@ -13,12 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users_notifications', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-
-            $table->integer('user_id');
-            $table->integer('notification_id');
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('language')->nullable();
         });
     }
 
@@ -29,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users_notifications');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('language');
+        });
     }
 };

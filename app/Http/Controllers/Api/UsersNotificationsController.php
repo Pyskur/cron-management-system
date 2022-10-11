@@ -11,57 +11,123 @@ use Validator;
 class UsersNotificationsController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Display a listing of the Notifications for a specific user.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function getNotifications(Request $request)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'user_id' => 'required|integer',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        $Notifications = UsersNotifications::where('user_id', $input['user_id'])->pluck('notification_id');
+        return response()->json($Notifications);
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\UsersNotifications  $usersNotifications
-     * @return \Illuminate\Http\Response
-     */
-    public function show(UsersNotifications $usersNotifications)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
+     * Display a listing of the Users for a specific notification.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UsersNotifications  $usersNotifications
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, UsersNotifications $usersNotifications)
+    public function getUsers(Request $request)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'notification_id' => 'required|integer',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        $users = UsersNotifications::where('notification_id', $input['notification_id'])->pluck('user_id');
+        return response()->json($users);
+    }
+
+    /**
+     * Add a user to a notification.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addUsertoNotification(Request $request)
+    {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'notification_id' => 'required|integer',
+            'user_id' => 'required|integer',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $user_notification = UsersNotifications::create($input);
+            return response()->json($user_notification);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "UsersNotifications store error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\UsersNotifications  $usersNotifications
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function destroy(UsersNotifications $usersNotifications)
+    public function deleteUserfromNotification(Request $request)
     {
-        //
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'notification_id' => 'required|integer',
+            'user_id' => 'required|integer',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        UsersNotifications::where('notification_id', $input['notification_id'])->where('user_id', $input['user_id'])->delete();
+
+        return response()->json();
     }
 }

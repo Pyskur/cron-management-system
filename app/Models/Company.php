@@ -16,5 +16,9 @@ class Company extends Model
         'address',
         'domain',
         'whitelist_ip',
+        'logo',
+        'color1',
+        'color2',
+        'color3'
     ];
 }

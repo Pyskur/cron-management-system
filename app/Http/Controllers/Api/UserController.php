@@ -49,6 +49,7 @@ class UserController extends Controller
             'country_id' => 'required|numeric',
             'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            'language' => 'required|string|min:3|max:50',
         ]);
         if($validator->fails()){
             return response()->json([
@@ -67,6 +68,7 @@ class UserController extends Controller
             'country_id'=> $request->country_id,
             'password'=> bcrypt($request->password),
             'phone'=> $request->phone,
+            'language'=> $request->language,
         ];
 
         $user = User::create($newdata);
@@ -115,6 +117,7 @@ class UserController extends Controller
             'country_id' => 'nullable|numeric',
             'password' => 'nullable|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
             'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            'language' => 'nullable|string|min:3|max:50',
         ]);
         if($validator->fails()){
             return response()->json([
@@ -148,6 +151,9 @@ class UserController extends Controller
         }
         if($request->country_id){
             $newdata['country_id'] = $request->country_id;
+        }
+        if($request->language){
+            $newdata['language'] = $request->language;
         }
         $result = $user->update($newdata);
         return response()->json($user);

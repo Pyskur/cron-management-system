@@ -64,16 +64,15 @@ class VideoController extends Controller
     public function update(Request $request, Video $video)
     {
         $input = $request->all();
-
         $validator = Validator::make($input, [
-            'title' => 'nullable|string',
-            'filename' => 'nullable|string',
-            'status' => 'nullable|numeric',
-            'file_size' => 'nullable|string|max:45',
-            'thumbnail' => 'nullable|string|max:45',
-            'out_url' => 'nullable|string',
-            'drm_enabled' => 'nullable|numeric',
+            'title' => 'string',
+            'status' => 'numeric',
+            'thumbnail' => 'string|max:45',
+            'drm_enabled' => 'numeric',
+            'publish_date' => 'date_format:Y-m-d H:i:s',
             'unpublish_date' => 'date_format:Y-m-d H:i:s',
+            'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
+            'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
         ]);
 
         if($validator->fails()){
@@ -83,6 +82,48 @@ class VideoController extends Controller
                 "message"=> $validator->errors()
             ]);
         }
+
+        // If Geo Block is changed , changes amend on AWS
+        //// get GeoGroupID
+        $newGeoGroupID = 0;
+        if($request->white_list == null && $request->black_list == null){
+            //// nothing to update Geo Block
+        }
+        else if($request->black_list != null){
+            //// process black list
+            $countryIDList = json_decode($request->black_list);
+            if(count($countryIDList) > 0){
+                if($this->_isCountryListValid($countryIDList)){
+                    $newGeoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+                }
+            }
+            else{
+                //global geo_group
+                $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+                if($globalGeoGroup)
+                    $newGeoGroupID = $globalGeoGroup->id;
+            }
+        }
+        else if($request->white_list != null){
+            //// process white list
+            $countryIDList = json_decode($request->white_list);
+            if($this->_isCountryListValid($countryIDList)){
+                $newGeoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+            }
+        }
+
+        if($newGeoGroupID > 0 && $video->geo_group_id != $newGeoGroupID){
+            //// add model's field to update
+            $input["geo_group_id"] = $newGeoGroupID;
+
+            //// Geo Block setting is changed, changes have to be amended on AWS
+            //// TODO
+            
+        }
+
+        //// remove fields which are not model's fields
+        unset($input["black_list"]);
+        unset($input["white_list"]);
 
         try {
             $video->update($input);
@@ -181,20 +222,32 @@ class VideoController extends Controller
         else if($request->black_list != null){
             //process black list
             $countryIDList = json_decode($request->black_list);
-            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+            if(count($countryIDList) > 0){
+                if($this->_isCountryListValid($countryIDList)){
+                    $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+                }
+            }
+            else{
+                //global geo_group
+                $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+                if($globalGeoGroup)
+                    $geoGroupID = $globalGeoGroup->id;
+            }
         }
         else if($request->white_list != null){
             //process white list
             $countryIDList = json_decode($request->white_list);
-            $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+            if($this->_isCountryListValid($countryIDList)){
+                $geoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+            }
         }
 
         if( $geoGroupID == 0){
-            //no global GeoGroup table
+            //no GeoGroup table
             return response()->json([
                 "error" => "Error",
                 "code" =>  0,
-                "message" => "Cannot upload video. Global GeoGroup NOT Found."
+                "message" => "Cannot upload video. Geo Retriction is no valid."
             ]);
         }
 
@@ -241,10 +294,10 @@ class VideoController extends Controller
     public function hookVideoUploaded(Request $request)
     {
         $data = $request->json()->all();
-        //Only for Test
-        // Test::create([
-        //     'data' => json_encode($request->json()->all())
-        // ]);
+        // Only for Test
+        Test::create([
+            'data' => json_encode($request->json()->all())
+        ]);
         
         if($data == null || !array_key_exists('Type', $data)){
             return response()->json([
@@ -300,6 +353,7 @@ class VideoController extends Controller
 
 
             $thumbnailUrl = $message->Outputs->THUMB_NAILS[0];
+            $thumbnailUrl = str_replace($originPrefix, $cdnDomainName, $thumbnailUrl);
             $thumbnailTokens = explode(".", $thumbnailUrl);
             $thumbnailCountText = array_slice($thumbnailTokens, -2, 1);
             $thumbnailCount = intval($thumbnailCountText);
@@ -736,6 +790,40 @@ class VideoController extends Controller
         }
         else
             return "expired";
+    }
+    public function getThumbnailsList(Video $video)
+    {
+        $thumbnailUrl = $video->thumbnail;
+        $thumbnailCount = $video->thumbnail_count;
+        $thumbnailTokens = explode(".", $thumbnailUrl);
+        if(count($thumbnailTokens) >= 3 && $thumbnailCount > 0){
+            $result = [];
+            for ($index = 1; $index <= $thumbnailCount; $index++){
+                $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad($index, 7, '0', STR_PAD_LEFT);
+                $result[] = implode(".", $thumbnailTokens);
+            }
+            return response()->json(
+                $result
+            );
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Thumbnail Url is not valid'
+            ]);
+        }
+
+    }
+    function _isCountryListValid($countryIDList){
+        if(count($countryIDList) == 0)
+            return false;
+        foreach($countryIDList as $countryID){
+            $country = Country::find($countryID);
+            if(!$country){
+                return false;
+            }
+        }
+        return true;
     }
 
     public function test(Request $request)

@@ -25,7 +25,7 @@ class User extends Authenticatable
         'last_name',
         'company_id',
         'country_id',
-		'language'
+		'language',
         'stripe_cust_id',
     ];
 
@@ -51,5 +51,10 @@ class User extends Authenticatable
     public function auto_renew()
     {
         return $this->belongsTo(AutoRenew::class);
+    }
+
+    public function isAdmin()
+    {
+        return true;
     }
 }

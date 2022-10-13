@@ -5,8 +5,12 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Models\Sms;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Validator;
+use App\Http\Controllers\Jobs\LeadSendmailJob;
+use App\Http\Controllers\Jobs\VerificationSendMailJob;
+use Illuminate\Support\Facades\Mail;
 
 class SmsController extends Controller
 {
@@ -143,5 +147,56 @@ class SmsController extends Controller
     {
         $sms->delete();
         return response()->json();
+    }
+
+    public function generateUniqueCode()
+    {
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersNumber = strlen($characters);
+        $codeLength = 6;
+
+        $code = '';
+
+        while (strlen($code) < 6) {
+            $position = rand(0, $charactersNumber - 1);
+            $character = $characters[$position];
+            $code = $code.$character;
+        }
+
+        return $code;
+    }
+
+    public function sendUserVerificationMessage(Request $request)
+    {
+        try
+        {
+            $data=$request->all();
+            $userid = $data['user_id'];
+            $ucode = $this->generateUniqueCode();
+            $expired = time() + 5 * 60;
+            User::where('id', $userid)->update(['verification_code' => $ucode]);
+            User::where('id', $userid)->update(['verification_code_expiry' => $expired]);
+            $userinfo = User::where('id', $userid)->first();
+            $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
+            return response()->json(['status'=>'true']);
+        }
+        catch (\Exception $e)
+        {
+            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+        }
+    }
+
+    public function sendMessage(Request $request)
+    {
+        try
+        {
+            $data=$request->all();
+            $this->dispatch(new LeadSendmailJob($data));
+            return response()->json(['status'=>'true']);
+        }
+        catch (\Exception $e)
+        {
+            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+        }
     }
 }

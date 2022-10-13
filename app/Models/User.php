@@ -25,7 +25,7 @@ class User extends Authenticatable
         'last_name',
         'company_id',
         'country_id',
-		'language'
+		'language',
         'stripe_cust_id',
     ];
 

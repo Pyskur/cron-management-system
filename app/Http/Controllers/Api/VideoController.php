@@ -113,11 +113,32 @@ class VideoController extends Controller
         }
 
         if($newGeoGroupID > 0 && $video->geo_group_id != $newGeoGroupID){
-            //// add model's field to update
-            $input["geo_group_id"] = $newGeoGroupID;
+            
 
             //// Geo Block setting is changed, changes have to be amended on AWS
-            //// TODO
+            $newGeoGroup = GeoGroup::find($newGeoGroupID);
+            $newVideoSubDirectory = $newGeoGroup->awsCloudfrontDistribution->dist_id;
+            
+            //// move s3 src file
+            $videoSrcUrlTokens = explode("/", $video->src_url);
+            $orgVideoSubDirectory = $videoSrcUrlTokens[5];
+            $orgPath = implode("/", array_slice($videoSrcUrlTokens, 3));
+            $newPath = str_replace($orgVideoSubDirectory, $newVideoSubDirectory, $orgPath);
+            if(Storage::disk('s3')->exists($orgPath)) {
+                $result = Storage::disk('s3')->move($orgPath, $newPath);
+            }
+            $newS3Url = str_replace($orgVideoSubDirectory, $newVideoSubDirectory, $video->src_url);
+
+            //// delete s3 dest folder
+            $s3DestUrl = $video->out_folder;
+            if(Storage::disk('s3-dest')->exists($s3DestUrl)) {
+                $result = Storage::disk('s3-dest')->deleteDirectory($s3DestUrl);
+            }
+
+            //// add model's field to update
+            $input["geo_group_id"] = $newGeoGroupID;
+            $input["src_url"] = $newS3Url;
+
             
         }
 
@@ -157,7 +178,7 @@ class VideoController extends Controller
         $s3Url = implode("/", array_slice($srcUrlTokens, 3));
         $results3 = false;
         if(Storage::disk('s3')->exists($s3Url)) {
-            $result = Storage::disk('s3')->delete($s3Url);
+            $results3 = Storage::disk('s3')->delete($s3Url);
         }
 
         //delete dest s3 bucket output folder
@@ -355,8 +376,8 @@ class VideoController extends Controller
             $thumbnailUrl = $message->Outputs->THUMB_NAILS[0];
             $thumbnailUrl = str_replace($originPrefix, $cdnDomainName, $thumbnailUrl);
             $thumbnailTokens = explode(".", $thumbnailUrl);
-            $thumbnailCountText = array_slice($thumbnailTokens, -2, 1);
-            $thumbnailCount = intval($thumbnailCountText);
+            $thumbnailCountText = array_slice($thumbnailTokens, -2, 1)[0];
+            $thumbnailCount = intval($thumbnailCountText) + 1;
             $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad(intval($thumbnailCount / 2), 7, '0', STR_PAD_LEFT);
             $thumbnailUrl = implode(".", $thumbnailTokens);
 
@@ -798,7 +819,7 @@ class VideoController extends Controller
         $thumbnailTokens = explode(".", $thumbnailUrl);
         if(count($thumbnailTokens) >= 3 && $thumbnailCount > 0){
             $result = [];
-            for ($index = 1; $index <= $thumbnailCount; $index++){
+            for ($index = 0; $index < $thumbnailCount; $index++){
                 $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad($index, 7, '0', STR_PAD_LEFT);
                 $result[] = implode(".", $thumbnailTokens);
             }
@@ -830,13 +851,10 @@ class VideoController extends Controller
     {
 
         //Test
-        $path = "EY6CESNM58DSQ/2f1516b2-04a4-427b-97b3-a3d7e0c0fdd4";
-        if(Storage::disk('s3-dest')->exists($path)) {
-            $result = Storage::disk('s3-dest')->deleteDirectory($path);
-            var_dump($result);
-            return "d";
-        }
-        return "done";
+        $path = "assets01/videos/E2OPUPEX8OY4VH/acf9da83-94b1-4055-86e3-457b63dcaceb.mp4";
+        $pathNew = "assets01/videos/E3F4DZS2KPW2JL/acf9da83-94b1-4055-86e3-457b63dcaceb.mp4";
+        $result = Storage::disk('s3')->move($path, $pathNew);
+        var_dump($result);
     }
 
 }

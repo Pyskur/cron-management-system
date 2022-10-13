@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('login', 'login');
+    Route::post('email_verification', 'email_verification');
 });
 
 // Test mode (should be in auth:sanctum)
@@ -102,3 +103,6 @@ Route::post('users_notifications/addUsertoNotification', [UsersNotificationsCont
 Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
 Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
 Route::get('payments/ipn', [PaymentController::class, 'ipn']);
+
+Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
+Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);

@@ -85,4 +85,26 @@ class AuthController extends Controller
 
         return response()->json([]);
     }
+
+    public function email_verification(Request $request)
+    {
+        $data = $request->all();
+        $user_id = $data['user_id'];
+        $ucode = $data['verification_code'];
+
+        $userinfo = User::where('id', $user_id)->first();
+        if(!$userinfo)
+        {
+            return response()->json(['error' => 'User not found']);
+        }
+        if($userinfo->verification_code !== $ucode)
+        {
+            return response()->json(['error' => 'Verification code doesn\'t match']);
+        }
+        if($userinfo->verification_code_expiry < time())
+        {
+            return response()->json(['error' => 'Verification code expired']);
+        }
+        return response()->json(['error' => 'Success']);
+    }
 }

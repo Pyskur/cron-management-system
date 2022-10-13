@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('login', 'login');
+    Route::post('email_verification', 'email_verification');
 });
 
 // Test mode (should be in auth:sanctum)

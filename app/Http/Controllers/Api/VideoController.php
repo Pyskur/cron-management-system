@@ -15,6 +15,7 @@ use App\Models\GeoGroup;
 use App\Models\AwsCloudfrontDistribution;
 use App\Models\CountryGeoGroupMap;
 use App\Models\Country;
+use Illuminate\Support\Facades\Auth;
 class VideoController extends Controller
 {
     const VIDEO_STATUS_CREATED = 0;
@@ -29,8 +30,16 @@ class VideoController extends Controller
      */
     public function index()
     {
-        $videos = Video::all();
-        return response()->json($videos);
+        if(Auth::user()->isAdmin()){
+            $videos = Video::all();
+            return response()->json($videos);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -51,7 +60,16 @@ class VideoController extends Controller
      */
     public function show(Video $video)
     {
-        return response()->json($video);
+        if(Auth::user()->isAdmin() || Auth::user()->id == $video->user_id)
+        {
+            return response()->json($video);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner of this video'
+            ]);
+        }
     }
 
     /**
@@ -63,103 +81,112 @@ class VideoController extends Controller
      */
     public function update(Request $request, Video $video)
     {
-        $input = $request->all();
-        $validator = Validator::make($input, [
-            'title' => 'string',
-            'status' => 'numeric',
-            'thumbnail' => 'string|max:45',
-            'drm_enabled' => 'numeric',
-            'publish_date' => 'date_format:Y-m-d H:i:s',
-            'unpublish_date' => 'date_format:Y-m-d H:i:s',
-            'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
-            'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+        if(Auth::user()->isAdmin() || Auth::user()->id == $video->user_id)
+        {
+            $input = $request->all();
+            $validator = Validator::make($input, [
+                'title' => 'string',
+                'status' => 'numeric',
+                'thumbnail' => 'string|max:45',
+                'drm_enabled' => 'numeric',
+                'publish_date' => 'date_format:Y-m-d H:i:s',
+                'unpublish_date' => 'date_format:Y-m-d H:i:s',
+                'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
+                'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
             ]);
-        }
 
-        // If Geo Block is changed , changes amend on AWS
-        //// get GeoGroupID
-        $newGeoGroupID = 0;
-        if($request->white_list == null && $request->black_list == null){
-            //// nothing to update Geo Block
-        }
-        else if($request->black_list != null){
-            //// process black list
-            $countryIDList = json_decode($request->black_list);
-            if(count($countryIDList) > 0){
-                if($this->_isCountryListValid($countryIDList)){
-                    $newGeoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            // If Geo Block is changed , changes amend on AWS
+            //// get GeoGroupID
+            $newGeoGroupID = 0;
+            if($request->white_list == null && $request->black_list == null){
+                //// nothing to update Geo Block
+            }
+            else if($request->black_list != null){
+                //// process black list
+                $countryIDList = json_decode($request->black_list);
+                if(count($countryIDList) > 0){
+                    if($this->_isCountryListValid($countryIDList)){
+                        $newGeoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, true);
+                    }
+                }
+                else{
+                    //global geo_group
+                    $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+                    if($globalGeoGroup)
+                        $newGeoGroupID = $globalGeoGroup->id;
                 }
             }
-            else{
-                //global geo_group
-                $globalGeoGroup = GeoGroup::where('is_global', true)->first();
-                if($globalGeoGroup)
-                    $newGeoGroupID = $globalGeoGroup->id;
+            else if($request->white_list != null){
+                //// process white list
+                $countryIDList = json_decode($request->white_list);
+                if($this->_isCountryListValid($countryIDList)){
+                    $newGeoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
+                }
+            }
+
+            if($newGeoGroupID > 0 && $video->geo_group_id != $newGeoGroupID){
+                
+
+                //// Geo Block setting is changed, changes have to be amended on AWS
+                $newGeoGroup = GeoGroup::find($newGeoGroupID);
+                $newVideoSubDirectory = $newGeoGroup->awsCloudfrontDistribution->dist_id;
+                
+                //// move s3 src file
+                $videoSrcUrlTokens = explode("/", $video->src_url);
+                $orgVideoSubDirectory = $videoSrcUrlTokens[5];
+                $orgPath = implode("/", array_slice($videoSrcUrlTokens, 3));
+                $newPath = str_replace($orgVideoSubDirectory, $newVideoSubDirectory, $orgPath);
+                if(Storage::disk('s3')->exists($orgPath)) {
+                    $result = Storage::disk('s3')->move($orgPath, $newPath);
+                }
+                $newS3Url = str_replace($orgVideoSubDirectory, $newVideoSubDirectory, $video->src_url);
+
+                //// delete s3 dest folder
+                $s3DestUrl = $video->out_folder;
+                if(Storage::disk('s3-dest')->exists($s3DestUrl)) {
+                    $result = Storage::disk('s3-dest')->deleteDirectory($s3DestUrl);
+                }
+
+                //// add model's field to update
+                $input["geo_group_id"] = $newGeoGroupID;
+                $input["src_url"] = $newS3Url;
+
+                
+            }
+
+            //// remove fields which are not model's fields
+            unset($input["black_list"]);
+            unset($input["white_list"]);
+
+            try {
+                $video->update($input);
+                return response()->json($video);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Video update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
             }
         }
-        else if($request->white_list != null){
-            //// process white list
-            $countryIDList = json_decode($request->white_list);
-            if($this->_isCountryListValid($countryIDList)){
-                $newGeoGroupID = $this->_getGeoGroupIDFromCountries($countryIDList, false);
-            }
-        }
-
-        if($newGeoGroupID > 0 && $video->geo_group_id != $newGeoGroupID){
-            
-
-            //// Geo Block setting is changed, changes have to be amended on AWS
-            $newGeoGroup = GeoGroup::find($newGeoGroupID);
-            $newVideoSubDirectory = $newGeoGroup->awsCloudfrontDistribution->dist_id;
-            
-            //// move s3 src file
-            $videoSrcUrlTokens = explode("/", $video->src_url);
-            $orgVideoSubDirectory = $videoSrcUrlTokens[5];
-            $orgPath = implode("/", array_slice($videoSrcUrlTokens, 3));
-            $newPath = str_replace($orgVideoSubDirectory, $newVideoSubDirectory, $orgPath);
-            if(Storage::disk('s3')->exists($orgPath)) {
-                $result = Storage::disk('s3')->move($orgPath, $newPath);
-            }
-            $newS3Url = str_replace($orgVideoSubDirectory, $newVideoSubDirectory, $video->src_url);
-
-            //// delete s3 dest folder
-            $s3DestUrl = $video->out_folder;
-            if(Storage::disk('s3-dest')->exists($s3DestUrl)) {
-                $result = Storage::disk('s3-dest')->deleteDirectory($s3DestUrl);
-            }
-
-            //// add model's field to update
-            $input["geo_group_id"] = $newGeoGroupID;
-            $input["src_url"] = $newS3Url;
-
-            
-        }
-
-        //// remove fields which are not model's fields
-        unset($input["black_list"]);
-        unset($input["white_list"]);
-
-        try {
-            $video->update($input);
-            return response()->json($video);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Video update error";
-            }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'User is not owner of this video'
             ]);
         }
     }
@@ -172,31 +199,40 @@ class VideoController extends Controller
      */
     public function destroy(Video $video)
     {
-        //delete src s3 bucket source file
-        $srcUrl = $video->src_url;
-        $srcUrlTokens = explode("/", $srcUrl);
-        $s3Url = implode("/", array_slice($srcUrlTokens, 3));
-        $results3 = false;
-        if(Storage::disk('s3')->exists($s3Url)) {
-            $results3 = Storage::disk('s3')->delete($s3Url);
-        }
+        if(Auth::user()->isAdmin() || Auth::user()->id == $video->user_id)
+        {
+            //delete src s3 bucket source file
+            $srcUrl = $video->src_url;
+            $srcUrlTokens = explode("/", $srcUrl);
+            $s3Url = implode("/", array_slice($srcUrlTokens, 3));
+            $results3 = false;
+            if(Storage::disk('s3')->exists($s3Url)) {
+                $results3 = Storage::disk('s3')->delete($s3Url);
+            }
 
-        //delete dest s3 bucket output folder
-        $s3Url = $video->out_folder;
-        $results3dest = false;
-        if(Storage::disk('s3-dest')->exists($s3Url)) {
-            $results3dest = Storage::disk('s3-dest')->deleteDirectory($s3Url);
-        }
+            //delete dest s3 bucket output folder
+            $s3Url = $video->out_folder;
+            $results3dest = false;
+            if(Storage::disk('s3-dest')->exists($s3Url)) {
+                $results3dest = Storage::disk('s3-dest')->deleteDirectory($s3Url);
+            }
 
-        //delete table
-        $video->delete();
-        return response()->json(
-            [
-                "result" =>  true,
-                "results3" =>$results3,
-                "results3dest" =>$results3dest
-            ]
-        );
+            //delete table
+            $video->delete();
+            return response()->json(
+                [
+                    "result" =>  true,
+                    "results3" =>$results3,
+                    "results3dest" =>$results3dest
+                ]
+            );
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner of this video'
+            ]);
+        }
     }
 
     /**
@@ -207,7 +243,7 @@ class VideoController extends Controller
      */
     public function uploadVideo(Request $request)
     {
-
+        $userid = Auth::user()->id;
         $input = $request->all();
         $validator = Validator::make($input, [
             'title'=> 'required|string',
@@ -278,7 +314,7 @@ class VideoController extends Controller
             'filename' => $fileName,
             'status' => self::VIDEO_STATUS_CREATED,
             'file_size' => $fileSize,
-            'user_id' => 1, //TODO,
+            'user_id' => $userid,
             'uuid'=> $uuid,
             'geo_group_id' => $geoGroupID,
             'publish_date'=> $request->publish_date,
@@ -747,61 +783,77 @@ class VideoController extends Controller
     }
     public function initTable(Request $request)
     {
-        $globalGeoGroup = GeoGroup::where('is_global', true)->first();
-        if($globalGeoGroup){
-            return response()->json([
-                "type" => "Failed",
-                "result" => 'There is already global GeoGroup table.'
-            ]);
+        if(Auth::user()->isAdmin()){
+            $globalGeoGroup = GeoGroup::where('is_global', true)->first();
+            if($globalGeoGroup){
+                return response()->json([
+                    "type" => "Failed",
+                    "result" => 'There is already global GeoGroup table.'
+                ]);
+            }
+            else{
+                $data = [
+                    'dist_id' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ID'),
+                    'description' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DESCRIPTION'),
+                    'domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DOMAINNAME'),
+                    'alt_domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ALTDOMAINNAME'),
+                    'origin' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ORIGIN'),
+                ]; 
+                $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);
+
+                $newGeoGroup = GeoGroup::create([
+                    'is_blacklist' => false,
+                    'is_global' => true,
+                    'uuid'=> (string) Str::uuid(),
+                    'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
+                ]);
+                return response()->json([
+                    "type" => "Success",
+                    "result" => 'Init Process is finished successfully.',
+                    "data"=>[
+                        "global_geo_group_id" => $newGeoGroup->id,
+                        "global_aws_cloudfront_distribution_id" => $newAwsCloudfrontDistribution->id
+                    ]
+                ]);
+            }
         }
         else{
-            $data = [
-                'dist_id' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ID'),
-                'description' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DESCRIPTION'),
-                'domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DOMAINNAME'),
-                'alt_domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ALTDOMAINNAME'),
-                'origin' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ORIGIN'),
-            ]; 
-            $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);
-
-            $newGeoGroup = GeoGroup::create([
-                'is_blacklist' => false,
-                'is_global' => true,
-                'uuid'=> (string) Str::uuid(),
-                'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
-            ]);
             return response()->json([
-                "type" => "Success",
-                "result" => 'Init Process is finished successfully.',
-                "data"=>[
-                    "global_geo_group_id" => $newGeoGroup->id,
-                    "global_aws_cloudfront_distribution_id" => $newAwsCloudfrontDistribution->id
-                ]
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
-
     }
     public function getStatus(Video $video)
     {
-        $statusText = "";
-        if($video->status == self::VIDEO_STATUS_CREATED)
-            $statusText = "CREATED";
-        else if($video->status == self::VIDEO_STATUS_UPLOADED)
-            $statusText = "UPLOADED";
-        else if($video->status == self::VIDEO_STATUS_AVAILABLE)
-            $statusText = "AVAILABLE";
+        if(Auth::user()->isAdmin() || Auth::user()->id == $video->user_id)
+        {
+            $statusText = "";
+            if($video->status == self::VIDEO_STATUS_CREATED)
+                $statusText = "CREATED";
+            else if($video->status == self::VIDEO_STATUS_UPLOADED)
+                $statusText = "UPLOADED";
+            else if($video->status == self::VIDEO_STATUS_AVAILABLE)
+                $statusText = "AVAILABLE";
+            
+
+
+            if($video->isExpired()){
+                $statusText = "EXPIRED";
+            }
         
-
-
-        if($video->isExpired()){
-            $statusText = "EXPIRED";
+            return response()->json([
+                'id' => $video->id,
+                'statusCode' => $video->status,
+                'statusText' => $statusText
+            ]);
         }
-       
-        return response()->json([
-            'id' => $video->id,
-            'statusCode' => $video->status,
-            'statusText' => $statusText
-        ]);
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner of this video'
+            ]);
+        }
     }
 
     public function getPlaybackUrl(Video $video)
@@ -814,25 +866,35 @@ class VideoController extends Controller
     }
     public function getThumbnailsList(Video $video)
     {
-        $thumbnailUrl = $video->thumbnail;
-        $thumbnailCount = $video->thumbnail_count;
-        $thumbnailTokens = explode(".", $thumbnailUrl);
-        if(count($thumbnailTokens) >= 3 && $thumbnailCount > 0){
-            $result = [];
-            for ($index = 0; $index < $thumbnailCount; $index++){
-                $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad($index, 7, '0', STR_PAD_LEFT);
-                $result[] = implode(".", $thumbnailTokens);
+        if(Auth::user()->isAdmin() || Auth::user()->id == $video->user_id)
+        {
+            $thumbnailUrl = $video->thumbnail;
+            $thumbnailCount = $video->thumbnail_count;
+            $thumbnailTokens = explode(".", $thumbnailUrl);
+            if(count($thumbnailTokens) >= 3 && $thumbnailCount > 0){
+                $result = [];
+                for ($index = 0; $index < $thumbnailCount; $index++){
+                    $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad($index, 7, '0', STR_PAD_LEFT);
+                    $result[] = implode(".", $thumbnailTokens);
+                }
+                return response()->json(
+                    $result
+                );
             }
-            return response()->json(
-                $result
-            );
+            else{
+                return response()->json([
+                    'error'=> 'Error',
+                    'message' => 'Thumbnail Url is not valid'
+                ]);
+            }
         }
         else{
             return response()->json([
                 'error'=> 'Error',
-                'message' => 'Thumbnail Url is not valid'
+                'message' => 'User is not owner of this video'
             ]);
         }
+        
 
     }
     function _isCountryListValid($countryIDList){
@@ -851,10 +913,9 @@ class VideoController extends Controller
     {
 
         //Test
-        $path = "assets01/videos/E2OPUPEX8OY4VH/acf9da83-94b1-4055-86e3-457b63dcaceb.mp4";
-        $pathNew = "assets01/videos/E3F4DZS2KPW2JL/acf9da83-94b1-4055-86e3-457b63dcaceb.mp4";
-        $result = Storage::disk('s3')->move($path, $pathNew);
-        var_dump($result);
+        $user = Auth::user();
+        var_dump($user->id);
+        var_dump($user->isAdmin());
     }
 
 }

@@ -85,6 +85,14 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
     Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);
+
+	//Video
+    Route::apiResource('videos', VideoController::class);
+    Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
+    Route::post('videos/test', [VideoController::class, 'test']);
+    Route::post('videos/init-table', [VideoController::class, 'initTable']);
+    Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
+    Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
 });
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
@@ -93,11 +101,6 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('email_verification', 'email_verification');
 });
     
-Route::apiResource('videos', VideoController::class);
-Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
+
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
-Route::post('videos/test', [VideoController::class, 'test']);
-Route::post('videos/init-table', [VideoController::class, 'initTable']);
-Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
 Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);
-Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);

@@ -44,6 +44,15 @@ Route::middleware('auth:sanctum')->group(function () {
     
     });
     Route::delete('auth/logout', [AuthController::class,'logout']);
+
+    //Video
+    Route::apiResource('videos', VideoController::class);
+    Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
+    Route::post('videos/test', [VideoController::class, 'test']);
+    Route::post('videos/init-table', [VideoController::class, 'initTable']);
+    Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
+    Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
+
 });
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
@@ -66,16 +75,12 @@ Route::apiResource('groups', GroupController::class);
 Route::apiResource('http_settings', HttpSettingController::class);
 Route::apiResource('limits', LimitController::class);
 Route::apiResource('orders', OrderController::class);
-Route::apiResource('videos', VideoController::class);
 Route::apiResource('countries', CountryController::class);
 
-Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
+
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
-Route::post('videos/test', [VideoController::class, 'test']);
-Route::post('videos/init-table', [VideoController::class, 'initTable']);
-Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
 Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);
-Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
+
 
 
 

@@ -107,4 +107,9 @@ class AuthController extends Controller
         }
         return response()->json(['error' => 'Success']);
     }
+
+    public function login_required()
+    {
+        return response()->json(['error' => 'Login is required.']);
+    }
 }

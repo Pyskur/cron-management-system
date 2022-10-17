@@ -44,31 +44,56 @@ Route::middleware('auth:sanctum')->group(function () {
     
     });
     Route::delete('auth/logout', [AuthController::class,'logout']);
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('notifications', NotificationController::class);
+    Route::apiResource('keys', KeyController::class);
+    Route::apiResource('keys_codes', KeysCodeController::class);
+    Route::apiResource('keys_refs', KeysRefController::class);
+    Route::apiResource('keys_smses', KeysSmsController::class);
+    Route::apiResource('crons', CronController::class);
+    Route::apiResource('auto_renew', AutoRenewController::class);
+    Route::apiResource('companies', CompanyController::class);
+    Route::apiResource('epds', EpdController::class);
+    Route::apiResource('groups', GroupController::class);
+    Route::apiResource('http_settings', HttpSettingController::class);
+    Route::apiResource('limits', LimitController::class);
+    Route::apiResource('orders', OrderController::class);
+    Route::apiResource('countries', CountryController::class);
+    
+    Route::apiResource('sms', SmsController::class);
+    
+    Route::get('report/daily_report', [ReportController::class, 'daily_report']);
+    Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
+    Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
+    
+    Route::post('users_companies/getCompanies', [UsersCompaniesController::class, 'getCompanies']);
+    Route::post('users_companies/getUsers', [UsersCompaniesController::class, 'getUsers']);
+    Route::post('users_companies/addUsertoCompany', [UsersCompaniesController::class, 'addUsertoCompany']);
+    Route::post('users_companies/deleteUserfromCompany', [UsersCompaniesController::class, 'deleteUserfromCompany']);
+    Route::post('users_companies/addGrouptoCompany', [UsersCompaniesController::class, 'addGrouptoCompany']);
+    
+    Route::post('users_groups/getGroups', [UsersGroupsController::class, 'getGroups']);
+    Route::post('users_groups/getUsers', [UsersGroupsController::class, 'getUsers']);
+    Route::post('users_groups/addUsertoGroup', [UsersGroupsController::class, 'addUsertoGroup']);
+    Route::post('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);
+    Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
+    Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
+    Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
+    Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
+    Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
+    Route::get('payments/ipn', [PaymentController::class, 'ipn']);
+    
+    Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
+    Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);
 });
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('login', 'login');
+    Route::get('login_required', 'login_required')->name('login');
     Route::post('email_verification', 'email_verification');
 });
-
-// Test mode (should be in auth:sanctum)
-Route::apiResource('users', UserController::class);
-Route::apiResource('notifications', NotificationController::class);
-Route::apiResource('keys', KeyController::class);
-Route::apiResource('keys_codes', KeysCodeController::class);
-Route::apiResource('keys_refs', KeysRefController::class);
-Route::apiResource('keys_smses', KeysSmsController::class);
-Route::apiResource('crons', CronController::class);
-Route::apiResource('auto_renew', AutoRenewController::class);
-Route::apiResource('companies', CompanyController::class);
-Route::apiResource('epds', EpdController::class);
-Route::apiResource('groups', GroupController::class);
-Route::apiResource('http_settings', HttpSettingController::class);
-Route::apiResource('limits', LimitController::class);
-Route::apiResource('orders', OrderController::class);
+    
 Route::apiResource('videos', VideoController::class);
-Route::apiResource('countries', CountryController::class);
-
 Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::post('videos/test', [VideoController::class, 'test']);
@@ -76,33 +101,3 @@ Route::post('videos/init-table', [VideoController::class, 'initTable']);
 Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
 Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);
 Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
-
-
-
-
-
-Route::apiResource('sms', SmsController::class);
-
-Route::get('report/daily_report', [ReportController::class, 'daily_report']);
-Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
-Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
-
-Route::post('users_companies/getCompanies', [UsersCompaniesController::class, 'getCompanies']);
-Route::post('users_companies/getUsers', [UsersCompaniesController::class, 'getUsers']);
-Route::post('users_companies/addUsertoCompany', [UsersCompaniesController::class, 'addUsertoCompany']);
-Route::post('users_companies/deleteUserfromCompany', [UsersCompaniesController::class, 'deleteUserfromCompany']);
-Route::post('users_companies/addGrouptoCompany', [UsersCompaniesController::class, 'addGrouptoCompany']);
-
-Route::post('users_groups/getGroups', [UsersGroupsController::class, 'getGroups']);
-Route::post('users_groups/getUsers', [UsersGroupsController::class, 'getUsers']);
-Route::post('users_groups/addUsertoGroup', [UsersGroupsController::class, 'addUsertoGroup']);
-Route::post('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);
-Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
-Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
-Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
-Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
-Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
-Route::get('payments/ipn', [PaymentController::class, 'ipn']);
-
-Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
-Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);

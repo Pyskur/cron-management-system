@@ -1,1 +1,1 @@
-Test branches should not appear in Master and not be deployed to server
+Test branches should appear in Master and  be deployed to server

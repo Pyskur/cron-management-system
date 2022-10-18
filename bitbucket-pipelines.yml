@@ -1,7 +1,8 @@
 image: atlassian/default-image:2
 
 pipelines:
-  default:
+  branches:
+    '{master}':
     - step:
         script:
           - apt-get update

@@ -25,9 +25,9 @@ return new class extends Migration
             $table->integer('video_enabled')->nullable();
             $table->foreignId('user_id')->constrained();
 
-            $table->foreignId('keys_ref_id')->constrained();
-            $table->foreignId('keys_code_id')->constrained();
-            $table->foreignId('keys_sms_id')->constrained('keys_smses');
+            $table->foreignId('keys_ref_id')->nullable()->constrained();
+            $table->foreignId('keys_code_id')->nullable()->constrained();
+            $table->foreignId('keys_sms_id')->nullable()->constrained('keys_smses');
             $table->timestamps();
         });
     }

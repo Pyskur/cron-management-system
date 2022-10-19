@@ -14,29 +14,47 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
             'name' => 'required|string|min:3|max:50',
             'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|confirmed|min:8',
             'first_name' => 'required|string|min:3|max:50',
             'last_name' => 'required|string|min:3|max:50',
+            'country_id' => 'required|numeric',
+            'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+            'language' => 'required|string|min:3|max:50',
         ]);
 
-        if ($validator->fails()) {
+        if($validator->fails()){
             return response()->json([
-                'code' => false,
-                'message' => 'Invalid Inputs',
-                'error' => $validator->errors()
-            ], 401);
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
         }
 
-        $user = new User();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password);
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name;
-        $user->save();
+        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+        $customer_info = $stripe->customers->create([
+            'description' => 'Veri User',
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        $newdata = [
+            'name'=> $request->name,
+            'email'=> $request->email,
+            'first_name'=> $request->first_name,
+            'last_name'=> $request->last_name,
+            'country_id'=> $request->country_id,
+            'password'=> bcrypt($request->password),
+            'phone'=> $request->phone,
+			'language'=> $request->language,
+            'stripe_cust_id' => $customer_info->id,
+        ];
+
+        $user = User::create($newdata);
 
         $token = $user->createToken('veri_token')->plainTextToken;
 

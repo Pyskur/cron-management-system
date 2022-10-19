@@ -82,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
     Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
     Route::get('payments/ipn', [PaymentController::class, 'ipn']);
+    Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod']);
+    Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);
+    Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);
     
     Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
     Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);

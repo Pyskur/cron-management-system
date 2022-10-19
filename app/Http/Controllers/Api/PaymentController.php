@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\PaymentMethod;
+use Illuminate\Support\Facades\Auth;
 use Validator;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
@@ -219,5 +221,82 @@ class PaymentController extends Controller
         //insert the transaction data into the database
         // $this->insert_model->storePaypalTransaction($data);
       }
+    }
+
+    public function addPaymentMethod(Request $request)
+    {
+      $input = $request->all();
+
+      $validator = Validator::make($input, [
+          'type' => 'required|string',
+          'number' => 'required|string',
+          'exp_month' => 'required|string',
+          'exp_year' => 'required|string',
+          'cvc' => 'required|numeric',
+      ]);
+      if($validator->fails()){
+          return response()->json([
+              "error" => "Validation Error",
+              "code"=> 0,
+              "message"=> $validator->errors()
+          ]);
+      }
+      $user = Auth::user();
+
+      $userinfo = User::where('id', $user->id)->first();
+
+      $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+      $paymentInfo = $stripe->paymentMethods->create([
+        'type' => $request->type,
+        'card' => [
+          'number' => $request->number,
+          'exp_month' => $request->exp_month,
+          'exp_year' => $request->exp_year,
+          'cvc' => $request->cvc,
+        ],
+      ]);
+
+      $res = $stripe->paymentMethods->attach(
+        $paymentInfo->id,
+        ['customer' => $userinfo->stripe_cust_id]
+      );
+
+      $new_method = new PaymentMethod();
+      $new_method->stripe_method_id = $paymentInfo->id;
+      $new_method->user_id = $user->id;
+      $new_method->save();
+
+      return response()->json($res);
+    }
+
+    public function getMyStripeProfile(Request $request)
+    {
+      $user = Auth::user();
+      $userinfo = User::where('id', $user->id)->first();
+
+      $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+      $res = $stripe->customers->retrieve(
+        $userinfo->stripe_cust_id,
+        []
+      );
+      return response()->json($res);
+    }
+
+    public function getMyStripePaymentMethods(Request $request)
+    {
+      $user = Auth::user();
+      $methods = PaymentMethod::where('user_id', $user->id)->get();
+
+      $result = [];
+      foreach($methods as $method)
+      {
+        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+        $res = $stripe->paymentMethods->retrieve(
+          $method->stripe_method_id,
+          []
+        );
+        $result[$method->id] = $res;
+      }
+      return response()->json($result);
     }
 }

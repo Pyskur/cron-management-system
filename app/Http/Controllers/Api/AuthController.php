@@ -18,6 +18,8 @@ class AuthController extends Controller
             'name' => 'required|string|min:3|max:50',
             'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|confirmed|min:8',
+            'first_name' => 'required|string|min:3|max:50',
+            'last_name' => 'required|string|min:3|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -32,6 +34,8 @@ class AuthController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
+        $user->first_name = $request->first_name;
+        $user->last_name = $request->last_name;
         $user->save();
 
         $token = $user->createToken('veri_token')->plainTextToken;

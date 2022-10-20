@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\UsersGroupsController;
 use App\Http\Controllers\Api\UsersNotificationsController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\VideoPlayerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,6 +94,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('videos/init-table', [VideoController::class, 'initTable']);
     Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
     Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
+
+    Route::apiResource('video_players', VideoPlayerController::class);
 });
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');

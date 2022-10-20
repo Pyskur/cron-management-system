@@ -168,9 +168,19 @@ class SmsController extends Controller
 
     public function sendUserVerificationMessage(Request $request)
     {
+        $data = $request->all();
+
+        $e = $this->sendUserVerificationMessage_core($data);
+        if($e === 0) {
+            return response()->json(['status'=>'true']);
+        }
+        return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+    }
+
+    public function sendUserVerificationMessage_core($data)
+    {
         try
         {
-            $data=$request->all();
             $userid = $data['user_id'];
             $ucode = $this->generateUniqueCode();
             $expired = time() + 5 * 60;
@@ -178,11 +188,11 @@ class SmsController extends Controller
             User::where('id', $userid)->update(['verification_code_expiry' => $expired]);
             $userinfo = User::where('id', $userid)->first();
             $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
-            return response()->json(['status'=>'true']);
+            return 0;
         }
         catch (\Exception $e)
         {
-            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+            return $e;
         }
     }
 

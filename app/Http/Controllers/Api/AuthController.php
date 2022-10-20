@@ -57,6 +57,8 @@ class AuthController extends Controller
         $user = User::create($newdata);
 
         // $token = $user->createToken('veri_token')->plainTextToken;
+        $sms = new SmsController;
+        $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
 
         return response()->json($user, 200);
     }

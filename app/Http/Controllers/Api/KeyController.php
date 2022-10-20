@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Models\Key;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Validator;
 
 class KeyController extends Controller
@@ -30,6 +31,7 @@ class KeyController extends Controller
     public function store(Request $request)
     {
         $input = $request->all();
+        $input['user_id'] = Auth::user()->id;
 
         $validator = Validator::make($input, [
             'title' => 'required|string|max:50',

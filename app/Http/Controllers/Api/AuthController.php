@@ -56,11 +56,9 @@ class AuthController extends Controller
 
         $user = User::create($newdata);
 
-        $token = $user->createToken('veri_token')->plainTextToken;
+        // $token = $user->createToken('veri_token')->plainTextToken;
 
-        return response()->json([
-            'apiToken' => $token
-        ], 200);
+        return response()->json($user, 200);
     }
 
     public function login(Request $request)
@@ -110,9 +108,23 @@ class AuthController extends Controller
 
     public function email_verification(Request $request)
     {
-        $data = $request->all();
-        $user_id = $data['user_id'];
-        $ucode = $data['verification_code'];
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'user_id' => 'required|numeric',
+            'verification_code' => 'required|string|min:6|max:6',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        $user_id = $input['user_id'];
+        $ucode = $input['verification_code'];
 
         $userinfo = User::where('id', $user_id)->first();
         if(!$userinfo)
@@ -127,7 +139,7 @@ class AuthController extends Controller
         {
             return response()->json(['error' => 'Verification code expired']);
         }
-        return response()->json(['error' => 'Success']);
+        return response()->json($userinfo);
     }
 
     public function login_required()

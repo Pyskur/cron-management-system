@@ -129,15 +129,27 @@ class AuthController extends Controller
         $userinfo = User::where('id', $user_id)->first();
         if(!$userinfo)
         {
-            return response()->json(['error' => 'User not found']);
+            return response()->json([
+                'code' => false,
+                'error' => 'Failed to verify',
+                'message' => 'User not found',
+            ]);
         }
         if($userinfo->verification_code !== $ucode)
         {
-            return response()->json(['error' => 'Verification code doesn\'t match']);
+            return response()->json([
+                'code' => false,
+                'error' => 'Failed to verify',
+                'message' => 'Verification code doesn\'t match',
+            ]);
         }
         if($userinfo->verification_code_expiry < time())
         {
-            return response()->json(['error' => 'Verification code expired']);
+            return response()->json([
+                'code' => false,
+                'error' => 'Failed to verify',
+                'message' => 'Verification code expired',
+            ]);
         }
         return response()->json($userinfo);
     }

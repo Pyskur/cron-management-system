@@ -42,7 +42,7 @@ class KeyController extends Controller
             'ip_address' => 'required|string|max:50',
             'otp_key' => 'required|numeric',
             'video_enabled' => 'required|numeric',
-            'user_id' => 'required|numeric',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -102,7 +102,7 @@ class KeyController extends Controller
             'ip_address' => 'nullable|string|max:50',
             'otp_key' => 'nullable|numeric',
             'video_enabled' => 'nullable|numeric',
-            'user_id' => 'nullable|numeric',
+            'user_id' => 'nullable|uuid',
         ]);
 
         if($validator->fails()){

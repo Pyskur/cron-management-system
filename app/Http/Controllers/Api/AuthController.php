@@ -21,7 +21,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:100|unique:users',
             'first_name' => 'required|string|min:3|max:50',
             'last_name' => 'required|string|min:3|max:50',
-            'country_id' => 'required|numeric',
+            'country_id' => 'required|uuid',
             'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'language' => 'required|string|min:3|max:50',
@@ -113,7 +113,7 @@ class AuthController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'user_id' => 'required|numeric',
+            'user_id' => 'required|uuid',
             'verification_code' => 'required|string|min:6|max:6',
         ]);
         

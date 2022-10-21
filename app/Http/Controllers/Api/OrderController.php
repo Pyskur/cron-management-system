@@ -48,7 +48,7 @@ class OrderController extends Controller
             'exp_month' => 'required|numeric',
             'exp_year' => 'required|numeric',
             'card_st_digit' => 'required|numeric',
-            'user_id' => 'required|numeric'
+            'user_id' => 'required|uuid'
         ]);
         
         if($validator->fails()){
@@ -116,7 +116,7 @@ class OrderController extends Controller
             'exp_month' => 'nullable|numeric',
             'exp_year' => 'nullable|numeric',
             'card_st_digit' => 'nullable|numeric',
-            'user_id' => 'nullable|numeric'
+            'user_id' => 'nullable|uuid'
         ]);
 
         if($validator->fails()){

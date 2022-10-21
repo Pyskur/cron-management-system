@@ -98,7 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
     Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
 
-    Route::apiResource('video_players', VideoPlayerController::class);
+    Route::apiResource('video_players', VideoPlayerController::class)->except([
+        'show'
+    ]);
 });
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
@@ -110,3 +112,6 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
 
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);
+Route::apiResource('video_players', VideoPlayerController::class)->only([
+    'show'
+]);

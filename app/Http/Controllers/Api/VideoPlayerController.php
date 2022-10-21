@@ -72,18 +72,9 @@ class VideoPlayerController extends Controller
      */
     public function show(VideoPlayer $videoPlayer)
     {
-        if(Auth::user()->isAdmin() || Auth::user()->id == $videoPlayer->user_id)
-        {
-            $data = $videoPlayer->config;
-            $data['player_id'] = $videoPlayer->id;
-            return response()->json($data);
-        }
-        else{
-            return response()->json([
-                'error'=> 'Error',
-                'message' => 'User is not owner of this videoPlayer'
-            ]);
-        }
+        $data = $videoPlayer->config;
+        $data['player_id'] = $videoPlayer->id;
+        return response()->json($data);
     }
 
     /**
@@ -96,47 +87,57 @@ class VideoPlayerController extends Controller
     public function update(Request $request, VideoPlayer $videoPlayer)
     {
         //
-        $updateList = [];
-        $input = $request->all();
-        if(array_key_exists('play_icon', $input)){
-            if(array_key_exists('enable', $input['play_icon'])){
-                $updateList['config->play_icon->enable'] = $input['play_icon']['enable'];
+        if(Auth::user()->isAdmin() || Auth::user()->id == $videoPlayer->user_id)
+        {
+            $updateList = [];
+            $input = $request->all();
+            if(array_key_exists('play_icon', $input)){
+                if(array_key_exists('enable', $input['play_icon'])){
+                    $updateList['config->play_icon->enable'] = $input['play_icon']['enable'];
+                }
+                if(array_key_exists('color', $input['play_icon'])){
+                    $updateList['config->play_icon->color'] = $input['play_icon']['color'];
+                }
+                if(array_key_exists('position', $input['play_icon'])){
+                    $updateList['config->play_icon->position'] = $input['play_icon']['position'];
+                }
             }
-            if(array_key_exists('color', $input['play_icon'])){
-                $updateList['config->play_icon->color'] = $input['play_icon']['color'];
+            if(array_key_exists('pause_icon', $input)){
+                if(array_key_exists('enable', $input['pause_icon'])){
+                    $updateList['config->pause_icon->enable'] = $input['pause_icon']['enable'];
+                }
+                if(array_key_exists('color', $input['pause_icon'])){
+                    $updateList['config->pause_icon->color'] = $input['pause_icon']['color'];
+                }
+                if(array_key_exists('position', $input['pause_icon'])){
+                    $updateList['config->pause_icon->position'] = $input['pause_icon']['position'];
+                }
             }
-            if(array_key_exists('position', $input['play_icon'])){
-                $updateList['config->play_icon->position'] = $input['play_icon']['position'];
+            if(array_key_exists('progress_bar', $input)){
+                if(array_key_exists('enable', $input['progress_bar'])){
+                    $updateList['config->progress_bar->enable'] = $input['progress_bar']['enable'];
+                }
+                if(array_key_exists('progress_thumb_color', $input['progress_bar'])){
+                    $updateList['config->progress_bar->progress_thumb_color'] = $input['progress_bar']['progress_thumb_color'];
+                }
+                if(array_key_exists('progress_played_color', $input['progress_bar'])){
+                    $updateList['config->progress_bar->progress_played_color'] = $input['progress_bar']['progress_played_color'];
+                }
+                if(array_key_exists('position', $input['progress_bar'])){
+                    $updateList['config->progress_bar->position'] = $input['progress_bar']['position'];
+                }
             }
-        }
-        if(array_key_exists('pause_icon', $input)){
-            if(array_key_exists('enable', $input['pause_icon'])){
-                $updateList['config->pause_icon->enable'] = $input['pause_icon']['enable'];
-            }
-            if(array_key_exists('color', $input['pause_icon'])){
-                $updateList['config->pause_icon->color'] = $input['pause_icon']['color'];
-            }
-            if(array_key_exists('position', $input['pause_icon'])){
-                $updateList['config->pause_icon->position'] = $input['pause_icon']['position'];
-            }
-        }
-        if(array_key_exists('progress_bar', $input)){
-            if(array_key_exists('enable', $input['progress_bar'])){
-                $updateList['config->progress_bar->enable'] = $input['progress_bar']['enable'];
-            }
-            if(array_key_exists('progress_thumb_color', $input['progress_bar'])){
-                $updateList['config->progress_bar->progress_thumb_color'] = $input['progress_bar']['progress_thumb_color'];
-            }
-            if(array_key_exists('progress_played_color', $input['progress_bar'])){
-                $updateList['config->progress_bar->progress_played_color'] = $input['progress_bar']['progress_played_color'];
-            }
-            if(array_key_exists('position', $input['progress_bar'])){
-                $updateList['config->progress_bar->position'] = $input['progress_bar']['position'];
-            }
-        }
 
-        $videoPlayer->forceFill($updateList)->save();
-        return response()->json($videoPlayer);
+            $videoPlayer->forceFill($updateList)->save();
+            return response()->json($videoPlayer);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner of this videoPlayer'
+            ]);
+        }
+        
     }
 
     /**

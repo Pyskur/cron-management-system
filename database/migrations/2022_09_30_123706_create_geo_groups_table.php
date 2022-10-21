@@ -14,10 +14,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('geo_groups', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->boolean('is_blacklist')->default(false);
             $table->boolean('is_global')->default(false);
-            $table->foreignId('aws_cloudfront_distribution_id')->constrained();
+            $table->string('uuid')->unique();
             $table->timestamps();
         });
     }

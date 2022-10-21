@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('sms', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('number_to_send', 24);
             $table->string('uniqueid', 32);
             $table->integer('date_expires');

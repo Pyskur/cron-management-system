@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('http_settings', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->integer('authentication')->nullable();
             $table->string('authentication_username', 50)->nullable();
             $table->string('authentication_password', 50)->nullable();

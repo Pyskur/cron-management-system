@@ -14,11 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('users_notifications', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->uuid('notification_id');
+            $table->foreign('notification_id')->references('id')->on('notifications');
             $table->timestamps();
-
-            $table->integer('user_id');
-            $table->integer('notification_id');
         });
     }
 

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('crons', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('uniqueid', 50);
             $table->string('name', 50);
             $table->string('action', 50);
@@ -22,7 +22,6 @@ return new class extends Migration
             $table->datetime('date_last_run')->nullable();
             $table->datetime('date_next_run')->nullable();
             $table->integer('next_cron_id')->default(0);
-            $table->foreignId('user_id')->constrained();
             $table->string('status', 50)->default(0);
             $table->tinyInteger('is_running');
             $table->datetime('start_time');

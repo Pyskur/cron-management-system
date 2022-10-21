@@ -14,9 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create('video_players', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->json('config');
-            $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
     }

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('keys_codes', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('type', 50)->nullable();
             $table->integer('length')->nullable();
             $table->integer('otp_exp_time')->nullable();

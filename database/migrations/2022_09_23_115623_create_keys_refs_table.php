@@ -15,7 +15,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('keys_refs', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('ref1', 50)->nullable();
             $table->string('ref2', 50)->nullable();
             $table->string('ref3', 50)->nullable();

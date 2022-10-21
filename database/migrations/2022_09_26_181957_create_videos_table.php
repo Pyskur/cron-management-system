@@ -15,17 +15,25 @@ return new class extends Migration
     public function up()
     {
         Schema::create('videos', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title')->nullable();
             $table->string('filename')->nullable();
             $table->integer('status')->nullable();
-            $table->string('file_size', 45)->nullable();
+            $table->integer('file_size')->nullable();
             $table->integer('geo_restrict')->nullable();
-            $table->string('thumbnail', 45)->nullable();
+            $table->string('thumbnail')->nullable();
+            $table->integer('thumbnail_count')->nullable();
             $table->string('parent_name', 45)->nullable();
-            $table->string('url')->nullable();
+            $table->string('src_url')->nullable();
+            $table->string('uuid')->unique();
+            $table->string('out_url')->nullable();
+            $table->string('out_folder')->nullable();
+            $table->double('out_folder_size')->nullable();
             $table->integer('drm_enabled')->nullable();
-            $table->foreignId('user_id')->constrained();
+            $table->datetime('publish_date')->nullable();
+            $table->datetime('unpublish_date')->nullable();
+            $table->dropColumn('geo_restrict');
+            $table->dropColumn('parent_name');
             $table->timestamps();
         });
     }

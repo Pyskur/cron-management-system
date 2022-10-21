@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('user_name')->nullable();
             $table->string('email')->nullable();
             $table->string('plan_id', 100)->nullable();
@@ -31,7 +31,6 @@ return new class extends Migration
             $table->Integer('exp_month')->nullable();
             $table->Integer('exp_year')->nullable();
             $table->Integer('card_st_digit')->nullable();
-            $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
     }

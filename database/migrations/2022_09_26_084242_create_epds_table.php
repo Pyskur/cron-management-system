@@ -15,7 +15,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('epds', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->integer('epd')->nullable();
             $table->integer('epd_interval')->nullable();
             $table->integer('timeout')->default(0);

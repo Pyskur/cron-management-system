@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('limits', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('uri', 255);
             $table->integer('count');
             $table->integer('hour_started');

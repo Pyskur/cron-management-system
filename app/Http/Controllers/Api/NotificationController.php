@@ -34,7 +34,7 @@ class NotificationController extends Controller
         $validator = Validator::make($input, [
             'name' => 'required|string',
             'status' => 'required|string',
-            'user_id' => 'required|numeric',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -91,7 +91,7 @@ class NotificationController extends Controller
         $validator = Validator::make($input, [
             'name' => 'nullable|string',
             'status' => 'nullable|string',
-            'user_id' => 'nullable|numberic',
+            'user_id' => 'nullable|uuid',
         ]);
 
         if($validator->fails()){

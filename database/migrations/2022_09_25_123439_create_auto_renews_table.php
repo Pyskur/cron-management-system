@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('auto_renews', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('auto_renew_min_amt')->nullable();
             $table->string('auto_renew_amt', 50)->nullable();
             $table->string('auto_renewal', 100)->nullable();

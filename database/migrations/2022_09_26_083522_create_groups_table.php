@@ -14,11 +14,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('groups', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-
+            $table->uuid('id')->primary();
             $table->string('name', 20);
             $table->string('description', 100);
+            $table->timestamps();
         });
     }
 

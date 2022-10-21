@@ -14,12 +14,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-
             $table->string('first_name');
             $table->string('last_name');
             $table->timestamp('last_login')->nullable();
@@ -34,7 +33,7 @@ return new class extends Migration
             $table->date('subscription_end_date')->nullable();
             $table->string('cvv', 50)->nullable();
             $table->string('verification_code', 50)->nullable();
-            $table->string('verification_code_expiry', 50)->nullable();
+            $table->integer('verification_code_expiry')->nullable();
             $table->string('verify_page_string')->nullable();
             $table->integer('is_verify')->nullable();
             $table->string('autologin_key')->nullable();
@@ -43,16 +42,15 @@ return new class extends Migration
             $table->string('ip_address', 50)->nullable();
             $table->string('activation_selector')->nullable();
             $table->string('activation_code')->nullable();
+            $table->string('language')->nullable();
             $table->string('forgotten_password_selector')->nullable();
             $table->string('forgotten_password_code')->nullable();
             $table->integer('forgotten_password_time')->nullable();
             $table->string('remember_selector')->nullable();
             $table->string('remember_code')->nullable();
-            $table->integer('company_id')->nullable();
             $table->integer('country_id')->nullable();
             $table->integer('epd_id')->nullable();
             $table->string('api_token')->nullable();
-  
             $table->rememberToken();
             $table->timestamps();
         });

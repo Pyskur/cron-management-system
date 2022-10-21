@@ -43,9 +43,9 @@ class SmsController extends Controller
             'charge' => 'required|string|max:4',
             'date_added' => 'required|date',
             'log' => 'required|numeric',
-            'key_id' => 'required|numeric',
+            'key_id' => 'required|uuid',
             'code_variable' => 'required|string|max:445',
-            'user_id' => 'required|nullable|numeric'
+            'user_id' => 'required|nullable|uuid'
         ]);
         
         if($validator->fails()){
@@ -106,9 +106,9 @@ class SmsController extends Controller
             'charge' => 'string|max:4',
             'date_added' => 'date',
             'log' => 'numeric',
-            'key_id' => 'numeric',
+            'key_id' => 'uuid',
             'code_variable' => 'string|max:445',
-            'user_id' => 'nullable|numeric'
+            'user_id' => 'nullable|uuid'
         ]);
 
         if($validator->fails()){

@@ -40,7 +40,7 @@ class CronController extends Controller
             'end_time' => 'required|date',
             'timezone' => 'required|string|max:50',
             'location' => 'required|string|max:50',
-            'user_id' => 'nullable|numeric'
+            'user_id' => 'nullable|uuid'
         ]);
         
         if($validator->fails()){
@@ -103,7 +103,7 @@ class CronController extends Controller
             'end_time' => 'nullable|date',
             'timezone' => 'nullable|string|max:50',
             'location' => 'nullable|string|max:50',
-            'user_id' => 'nullable|numeric'
+            'user_id' => 'nullable|uuid'
         ]);
 
         if($validator->fails()){

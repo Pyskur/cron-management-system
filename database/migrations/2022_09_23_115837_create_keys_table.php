@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('keys', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title', 50);
             $table->string('key', 50);
             $table->integer('level');
@@ -23,11 +23,6 @@ return new class extends Migration
             $table->string('ip_address', 50)->nullable();
             $table->tinyInteger('otp_key')->nullable();
             $table->integer('video_enabled')->nullable();
-            $table->foreignId('user_id')->constrained();
-
-            $table->foreignId('keys_ref_id')->nullable()->constrained();
-            $table->foreignId('keys_code_id')->nullable()->constrained();
-            $table->foreignId('keys_sms_id')->nullable()->constrained('keys_smses');
             $table->timestamps();
         });
     }

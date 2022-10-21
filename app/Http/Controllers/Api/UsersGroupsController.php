@@ -21,7 +21,7 @@ class UsersGroupsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'user_id' => 'required|integer',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -47,7 +47,7 @@ class UsersGroupsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'group_id' => 'required|integer',
+            'group_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -73,8 +73,8 @@ class UsersGroupsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'group_id' => 'required|integer',
-            'user_id' => 'required|integer',
+            'group_id' => 'required|uuid',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -114,8 +114,8 @@ class UsersGroupsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'group_id' => 'required|integer',
-            'user_id' => 'required|integer',
+            'group_id' => 'required|uuid',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){

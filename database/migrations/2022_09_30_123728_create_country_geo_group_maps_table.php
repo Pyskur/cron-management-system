@@ -14,9 +14,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('country_geo_group_maps', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('country_id')->constrained();
-            $table->foreignId('geo_group_id')->constrained();
+            $table->uuid('id')->primary();
+            $table->uuid('country_id');
+            $table->foreign('country_id')->references('id')->on('countries');
+            $table->uuid('geo_group_id');
+            $table->foreign('geo_group_id')->references('id')->on('geo_groups');
             $table->timestamps();
         });
     }

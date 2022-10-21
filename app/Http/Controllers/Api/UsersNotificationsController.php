@@ -21,7 +21,7 @@ class UsersNotificationsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'user_id' => 'required|integer',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -47,7 +47,7 @@ class UsersNotificationsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'notification_id' => 'required|integer',
+            'notification_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -73,8 +73,8 @@ class UsersNotificationsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'notification_id' => 'required|integer',
-            'user_id' => 'required|integer',
+            'notification_id' => 'required|uuid',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){
@@ -114,8 +114,8 @@ class UsersNotificationsController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'notification_id' => 'required|integer',
-            'user_id' => 'required|integer',
+            'notification_id' => 'required|uuid',
+            'user_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){

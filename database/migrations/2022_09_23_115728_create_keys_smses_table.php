@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('keys_smses', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('from', 10)->nullable();
             $table->string('text')->nullable();
             $table->string('status', 50)->nullable();

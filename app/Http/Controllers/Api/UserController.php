@@ -79,6 +79,9 @@ class UserController extends Controller
 
         $user = User::create($newdata);
 
+        $sms = new SmsController;
+        $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
+
         return response()->json($user);
     }
 
@@ -161,6 +164,13 @@ class UserController extends Controller
             $newdata['language'] = $request->language;
         }
         $result = $user->update($newdata);
+
+        if($reqest->email)
+        {
+            $sms = new SmsController;
+            $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
+        }
+
         return response()->json($user);
     }
 

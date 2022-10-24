@@ -913,9 +913,12 @@ class VideoController extends Controller
     {
 
         //Test
-        $user = Auth::user();
-        var_dump($user->id);
-        var_dump($user->isAdmin());
+        return response()->json([
+            $request->ip(),
+            \Request::getClientIp(true),
+            \Request::ip(),
+            $_SERVER
+        ]);
     }
 
 }

@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use App\Models\User;
+use App\Models\Key;
 
 class AuthController extends Controller
 {
@@ -93,6 +94,46 @@ class AuthController extends Controller
             ], 400);
         }
     }
+
+    public function loginWithAppCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'appcode' => 'required|string|size:32'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => false,
+                'message' => 'Invalid Inputs',
+                'error' => $validator->errors()
+            ], 422);
+        }
+
+        $key = Key::where('key', $request->appcode)->first();
+
+        if ($key != null) {
+            $clientIpAddr = $request->ip();
+
+            if(!in_array($clientIpAddr, $key->ip_address)){
+                return response()->json([
+                    'code' => false,
+                    'message' => 'Login from your location is not allowed.',
+                ], 400);
+            }
+            Auth::login($key->user);
+            $user = Auth::user();
+            $token = $user->createToken('veri_token')->plainTextToken;
+            return response()->json([
+                'api_token' => $token
+            ], 200);
+        } else {
+            return response()->json([
+                'code' => false,
+                'message' => 'Invalid Credentials',
+            ], 400);
+        }
+    }
+
 
     public function logout(Request $request)
     {

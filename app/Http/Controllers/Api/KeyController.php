@@ -8,6 +8,8 @@ use App\Models\Key;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
+use Illuminate\Support\Str;
+use Dirape\Token\Token;
 
 class KeyController extends Controller
 {
@@ -18,8 +20,17 @@ class KeyController extends Controller
      */
     public function index()
     {
-        $keys = Key::all();
-        return response()->json($keys);
+        if(Auth::user()->isAdmin()){
+            $keys = Key::all();
+            return response()->json($keys);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+
     }
 
     /**
@@ -31,19 +42,16 @@ class KeyController extends Controller
     public function store(Request $request)
     {
         $input = $request->all();
-        $input['user_id'] = Auth::user()->id;
+
 
         $validator = Validator::make($input, [
             'title' => 'required|string|max:50',
-            'key' => 'required|string|size:32|alpha_num',
             'level' => 'required|numeric',
             'ignore_limits' => 'required|numeric',
             'is_private_key' => 'required|numeric',
-            'ip_address' => 'required|string|max:50',
-            'otp_key' => 'required|numeric',
-            'video_enabled' => 'required|numeric',
-            'user_id' => 'required|uuid',
+            'ip_address' => 'string|regex:/^(\[.*\])$/',
         ]);
+
         
         if($validator->fails()){
             return response()->json([
@@ -54,6 +62,13 @@ class KeyController extends Controller
         }
 
         try {
+            $input['user_id'] = Auth::user()->id;
+            $input['key'] = (new Token())->Unique('keys', 'key', 32);
+            $input['ip_address'] = json_decode($input['ip_address']);
+            //TODO key_smses
+            //
+            //$input['keys_sms_id'] = '';
+
             $key = Key::create($input);
             return response()->json($key);
         } catch (\Exception $e) {
@@ -79,7 +94,16 @@ class KeyController extends Controller
      */
     public function show(Key $key)
     {
-        return response()->json($key);
+        if(Auth::user()->isAdmin() || Auth::user()->id == $key->user_id)
+        {
+            return response()->json($key);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner of this Key'
+            ]);
+        }
     }
 
     /**
@@ -90,45 +114,65 @@ class KeyController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Key $key)
-    {
-        $input = $request->all();
+    {        
+        if(Auth::user()->isAdmin() || Auth::user()->id == $key->user_id)
+        {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'title' => 'nullable|string|max:50',
-            'key' => 'nullable|string|size:32|alpha_num',
-            'level' => 'nullable|numeric',
-            'ignore_limits' => 'nullable|numeric',
-            'is_private_key' => 'nullable|numeric',
-            'ip_address' => 'nullable|string|max:50',
-            'otp_key' => 'nullable|numeric',
-            'video_enabled' => 'nullable|numeric',
-            'user_id' => 'nullable|uuid',
-        ]);
+            $validator = Validator::make($input, [
+                'title' => 'nullable|string|max:50',
+                'level' => 'nullable|numeric',
+                'ignore_limits' => 'nullable|numeric',
+                'is_private_key' => 'nullable|numeric',
+                'ip_address' => 'string|regex:/^(\[.*\])$/',
+            ]);
+            //TODO key_smses
+            //
 
-        if($validator->fails()){
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            //unset some not updating allowed field
+            if(array_key_exists('key', $input)){
+                unset($input["key"]);
+            }
+            if(array_key_exists('user_id', $input)){
+                unset($input["user_id"]);
+            }
+            if(array_key_exists('keys_sms_id', $input)){
+                unset($input["keys_sms_id"]);
+            }
+
+            try {
+                $input['ip_address'] = json_decode($input['ip_address']);
+                $key->update($input);
+                return response()->json($key);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Key update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+        else{
             return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+                'error'=> 'Error',
+                'message' => 'User is not owner of this Key'
             ]);
         }
-
-        try {
-            $key->update($input);
-            return response()->json($key);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Key update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
+        
     }
 
     /**
@@ -139,7 +183,16 @@ class KeyController extends Controller
      */
     public function destroy(Key $key)
     {
-        $key->delete();
-        return response()->json();
+        if(Auth::user()->isAdmin() || Auth::user()->id == $key->user_id)
+        {
+            $key->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner of this Key'
+            ]);
+        }
     }
 }

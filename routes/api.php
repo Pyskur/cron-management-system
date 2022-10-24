@@ -105,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('login', 'login');
+    Route::post('login-appcode', 'loginWithAppCode');
     Route::get('login_required', 'login_required')->name('login');
     Route::post('email_verification', 'email_verification');
 });

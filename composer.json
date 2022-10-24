@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "aws/aws-sdk-php-laravel": "^3.7",
+        "dirape/token": "^2.3",
         "doctrine/dbal": "^3.4",
         "goldspecdigital/laravel-eloquent-uuid": "9.0",
         "guzzlehttp/guzzle": "^7.2",

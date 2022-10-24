@@ -21,7 +21,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:100|unique:users',
             'first_name' => 'required|string|min:3|max:50',
             'last_name' => 'required|string|min:3|max:50',
-            'country_id' => 'required|uuid',
+            'country_id' => 'required|numeric',
             'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'language' => 'required|string|min:3|max:50',

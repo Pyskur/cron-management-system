@@ -114,10 +114,10 @@ class AuthController extends Controller
         if ($key != null) {
             $clientIpAddr = $request->ip();
 
-            if(!in_array($clientIpAddr, $key->ip_address)){
+            if($key->is_private_key && !in_array($clientIpAddr, $key->ip_address)){
                 return response()->json([
                     'code' => false,
-                    'message' => 'Login from your location is not allowed.',
+                    'message' => "Login from your localtion {$clientIpAddr} is not allowed.",
                 ], 400);
             }
             Auth::login($key->user);

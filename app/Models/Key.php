@@ -16,8 +16,20 @@ class Key extends Model
         'ignore_limits',
         'is_private_key',
         'ip_address',
-        'otp_key',
-        'video_enabled',
-        'user_id'
-     ];
+        'user_id',
+        'keys_sms_id'
+    ];
+
+    protected $casts = [
+        'ip_address' => 'array'
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function keys_sms()
+    {
+        return $this->belongsTo(KeysSms::class);
+    }
 }

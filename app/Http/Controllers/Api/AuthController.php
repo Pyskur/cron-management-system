@@ -95,10 +95,10 @@ class AuthController extends Controller
         }
     }
 
-    public function loginWithAppCode(Request $request)
+    public function loginWithApiKey(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'appcode' => 'required|string|size:32'
+            'api_key' => 'required|string|size:32'
         ]);
 
         if ($validator->fails()) {
@@ -109,7 +109,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $key = Key::where('key', $request->appcode)->first();
+        $key = Key::where('key', $request->api_key)->first();
 
         if ($key != null) {
             $clientIpAddr = $request->ip();

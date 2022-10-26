@@ -109,7 +109,7 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('token', 'loginWithApiKey');
     Route::get('login_required', 'login_required')->name('login');
-    Route::post('email_verification', 'email_verification');
+    Route::post('verify/email', 'email_verification');
 });
     
 

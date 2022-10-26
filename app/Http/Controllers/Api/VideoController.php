@@ -86,6 +86,7 @@ class VideoController extends Controller
             $input = $request->all();
             $validator = Validator::make($input, [
                 'title' => 'string',
+                'path' => 'string',
                 'status' => 'numeric',
                 'thumbnail' => 'string|max:45',
                 'drm_enabled' => 'numeric',
@@ -247,6 +248,7 @@ class VideoController extends Controller
         $input = $request->all();
         $validator = Validator::make($input, [
             'title'=> 'required|string',
+            'path'=> 'string',
             'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
             'publish_date' => 'date_format:Y-m-d H:i:s',
             'unpublish_date' => 'date_format:Y-m-d H:i:s',
@@ -309,8 +311,10 @@ class VideoController extends Controller
         }
 
         //insert video table
+        $path = $request->path != null ? $request->path : "/";
         $newVideo = [
             'title' => $request->title,
+            'path' => $path,
             'filename' => $fileName,
             'status' => self::VIDEO_STATUS_CREATED,
             'file_size' => $fileSize,
@@ -907,6 +911,16 @@ class VideoController extends Controller
             }
         }
         return true;
+    }
+
+    public function getVideosByPath(Request $request){
+        $path = $request->path;
+        $recursive = $request->recursive;
+        if($recursive == 1 || $recursive == "1")
+            $videos = Video::where('user_id', Auth::user()->id)->where('path', 'like', $path.'%')->get();
+        else
+            $videos = Video::where('user_id', Auth::user()->id)->where('path', $path)->get();
+        return response()->json($videos);
     }
 
     public function test(Request $request)

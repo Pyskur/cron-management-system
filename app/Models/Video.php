@@ -12,6 +12,7 @@ class Video extends Model
     protected $fillable = [
         'title',
         'filename',
+        'path',
         'status',
         'file_size',
         'geo_restrict',

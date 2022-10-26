@@ -3,32 +3,53 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\ResetCodePassword;
-use Illuminate\Foundation\Auth\User;
+use App\Models\User;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\ResetPasswordRequest;
+use Illuminate\Http\Request;
+use Validator;
 
 class ResetPasswordController extends Controller
 {
     /**
-     * Change the password (Setp 3)
-     *
      * @param  mixed $request
      * @return void
      */
-    public function __invoke(ResetPasswordRequest $request)
+    public function __invoke(Request $request)
     {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'code' => 'required|string|exists:reset_code_passwords',
+            'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
         $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
 
         if ($passwordReset->isExpire()) {
-            return $this->jsonResponse(null, trans('passwords.code_is_expire'), 422);
+            return response()->json([
+                'code' => false,
+                'error' => 'Failed to reset',
+                'message' => 'Reset code expired',
+            ]);
         }
 
         $user = User::firstWhere('email', $passwordReset->email);
 
-        $user->update($request->only('password'));
+        $user->update([
+            'password' => bcrypt($request->password)
+        ]);
 
-        $passwordReset->delete();
+        
+        ResetCodePassword::where('code', $request->code)->delete();
 
-        return $this->jsonResponse(null, trans('site.password_has_been_successfully_reset'), 200);
+        return response()->json(['userInfo' => $user]);
     }
 }

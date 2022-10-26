@@ -1,38 +1,25 @@
 <?php
+
 namespace App\Http\Controllers\Api;
+
+use App\Models\ResetCodePassword;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Auth\CodeCheckRequest;
-use Validator;
 
 class CodeCheckController extends Controller
 {
-    public function __invoke(Request $request)
+    /**
+     * @param  mixed $request
+     * @return void
+     */
+    public function __invoke(CodeCheckRequest $request)
     {
-        $request->validate([
-            'code' => 'required|string|exists:reset_code_passwords',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        // find the code
         $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
 
-        // check if it does not expired: the time is one hour
-        if ($passwordReset->created_at > now()->addHour()) {
-            $passwordReset->delete();
-            return response(['message' => trans('passwords.code_is_expire')], 422);
+        if ($passwordReset->isExpire()) {
+            return response()->json();
         }
 
-        // find user's email 
-        $user = User::firstWhere('email', $passwordReset->email);
-
-        // update user password
-        $user->update($request->only('password'));
-
-        // delete current code 
-        $passwordReset->delete();
-
-        return response(['message' =>'password has been successfully reset'], 200);
+        return response()->json(['code' => $passwordReset->code]);
     }
 }

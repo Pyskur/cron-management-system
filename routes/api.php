@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
     Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
     Route::get('videos/by-path', [VideoController::class, 'getVideosByPath']);
+    Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
     Route::apiResource('videos', VideoController::class);
 
     

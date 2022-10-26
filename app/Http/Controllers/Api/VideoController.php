@@ -923,6 +923,26 @@ class VideoController extends Controller
         return response()->json($videos);
     }
 
+    public function getVideosByPathAdmin(Request $request){
+        if(Auth::user()->isAdmin()){
+            $path = $request->path;
+            $user_id = $request->user_id;
+            $recursive = $request->recursive;
+            if($recursive == 1 || $recursive == "1")
+                $videos = Video::where('user_id', $user_id)->where('path', 'like', $path.'%')->get();
+            else
+                $videos = Video::where('user_id', $user_id)->where('path', $path)->get();
+            return response()->json($videos);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+
+    }
+    
     public function test(Request $request)
     {
 

@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CronController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\CodeCheckController;
+use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\LimitController;
 use App\Http\Controllers\Api\NotificationController;
@@ -105,14 +108,17 @@ Route::middleware('auth:sanctum')->group(function () {
         'show'
     ]);
 });
-Route::prefix('auth')->controller(AuthController::class)->group(function () {
-    Route::post('register', 'register');
-    Route::post('login', 'login');
-    Route::post('token', 'loginWithApiKey');
-    Route::get('login_required', 'login_required')->name('login');
-    Route::post('verify/email', 'email_verification');
-});
     
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::get('login_required', [AuthController::class, 'login_required'])->name('login');
+    Route::post('email_verification', [AuthController::class, 'email_verification']);
+	Route::post('token', [AuthController::class, 'loginWithApiKey']);
+    Route::post('password/email', ForgotPasswordController::class);
+    Route::post('password/code/check', CodeCheckController::class);
+    Route::post('password/reset', ResetPasswordController::class); 
+});    
 
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);

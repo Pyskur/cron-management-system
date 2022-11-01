@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Validator;
+use Illuminate\Support\Facades\Auth;
+use function Ramsey\Uuid\v1;
+
 class UserController extends Controller
 {
     /**
@@ -16,8 +19,18 @@ class UserController extends Controller
     public function index()
     {
         //
-        $users = User::all();
-        return response()->json($users);
+        if(Auth::user()->isAdmin()){
+            $users = User::all();
+            return response()->json($users);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+
+
     }
 
     /**
@@ -93,7 +106,34 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return response()->json($user);
+        if(Auth::user()->isAdmin())
+        {
+            return response()->json($user);
+        }
+        else if(Auth::user()->id == $user->id){
+            return response()->json(
+                [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'active' => $user->active,
+                    'phone' => $user->phone,
+                    'rate' => $user->rate,
+                    'balance' => $user->balance,
+                    'is_verify' => $user->is_verify,
+                    'language' => $user->language,
+                    'country_id' => $user->country_id,
+                ]
+            );
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner.'
+            ]);
+        }
     }
 
     /**
@@ -165,7 +205,7 @@ class UserController extends Controller
         }
         $result = $user->update($newdata);
 
-        if($reqest->email)
+        if($request->email)
         {
             $sms = new SmsController;
             $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
@@ -228,7 +268,18 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $user->delete();
-        return response()->json();
+        if(Auth::user()->isAdmin() || Auth::user()->id == $user->id)
+        {
+            $user->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'User is not owner'
+            ]);
+        }
+
+
     }
 }

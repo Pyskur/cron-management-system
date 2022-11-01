@@ -176,14 +176,23 @@ class UserController extends Controller
 
     /**
      * Update the balance in storage
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\User $user
-     * @return \Illuminate\Http\Response
      */
-    public function update_balance(Request $request, User $user)
+    public function updateBalance($email, $type, $size = 1)
     {
-        $balance = intval($request->balance);
+        switch ($type) {
+            case 'video':
+                $balance = 1;
+                break;
+            case 'bandwidth':
+                $balance = 1;
+                break;
+            case 'sms':
+                $balance = 1;
+                break;
+        }
+
+        $user = User::where('email', $email)->first();
+
         $validator = Validator::make($balance, [
             'balance' => 'nullable|numeric',
         ]);

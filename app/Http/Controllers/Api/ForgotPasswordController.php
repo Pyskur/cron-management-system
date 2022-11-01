@@ -22,6 +22,9 @@ class ForgotPasswordController extends Controller
 
         Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
 
+        $user = new UserController;
+        $user->updateBalance($request->email, 'sms');
+
         return response()->json();
     }
 }

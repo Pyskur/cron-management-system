@@ -58,7 +58,7 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::apiResource('keys_smses', KeysSmsController::class);
         Route::apiResource('crons', CronController::class);
         Route::apiResource('auto_renew', AutoRenewController::class);
-        Route::apiResource('companies', CompanyController::class);
+        Route::apiResource('company', CompanyController::class);
         Route::apiResource('epds', EpdController::class);
         Route::apiResource('groups', GroupController::class);
         Route::apiResource('http_settings', HttpSettingController::class);

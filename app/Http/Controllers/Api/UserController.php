@@ -175,6 +175,52 @@ class UserController extends Controller
     }
 
     /**
+     * Update the balance in storage
+     */
+    public function updateBalance($email, $type, $size = 1)
+    {
+        switch ($type) {
+            case 'video':
+                $balance = 1;
+                break;
+            case 'bandwidth':
+                $balance = 1;
+                break;
+            case 'sms':
+                $balance = 1;
+                break;
+        }
+
+        $user = User::where('email', $email)->first();
+
+        $validator = Validator::make($balance, [
+            'balance' => 'nullable|numeric',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                "error" => "Validation error",
+                "code" => 0,
+                "message" => $validator->errors()
+            ]);
+        }
+
+        $newdata = [];
+        $newdata['balance'] = $user['balance'] - $balance;
+
+        if ($newdata['balance'] < 0) {
+            return response()->json([
+                "error" => "Balance error",
+                "code" => 0,
+                "message" => "Low Balance"
+            ]);
+        }
+
+        $user->update($newdata);
+
+        return response()->json($user);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\User  $user

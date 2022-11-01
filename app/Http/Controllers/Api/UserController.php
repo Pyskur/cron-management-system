@@ -121,7 +121,10 @@ class UserController extends Controller
                     'active' => $user->active,
                     'phone' => $user->phone,
                     'rate' => $user->rate,
-                    'balance' => $user->balance
+                    'balance' => $user->balance,
+                    'is_verify' => $user->is_verify,
+                    'language' => $user->language,
+                    'country_id' => $user->country_id,
                 ]
             );
         }

@@ -175,6 +175,43 @@ class UserController extends Controller
     }
 
     /**
+     * Update the balance in storage
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\User $user
+     * @return \Illuminate\Http\Response
+     */
+    public function update_balance(Request $request, User $user)
+    {
+        $balance = intval($request->balance);
+        $validator = Validator::make($balance, [
+            'balance' => 'nullable|numeric',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                "error" => "Validation error",
+                "code" => 0,
+                "message" => $validator->errors()
+            ]);
+        }
+
+        $newdata = [];
+        $newdata['balance'] = $user['balance'] - $balance;
+
+        if ($newdata['balance'] < 0) {
+            return response()->json([
+                "error" => "Balance error",
+                "code" => 0,
+                "message" => "Low Balance"
+            ]);
+        }
+
+        $user->update($newdata);
+
+        return response()->json($user);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\User  $user

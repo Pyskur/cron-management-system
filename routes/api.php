@@ -75,17 +75,17 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::post('users_companies/getCompanies', [UsersCompaniesController::class, 'getCompanies']);
         Route::post('users_companies/getUsers', [UsersCompaniesController::class, 'getUsers']);
         Route::post('users_companies/addUsertoCompany', [UsersCompaniesController::class, 'addUsertoCompany']);
-        Route::post('users_companies/deleteUserfromCompany', [UsersCompaniesController::class, 'deleteUserfromCompany']);
+        Route::delete('users_companies/deleteUserfromCompany', [UsersCompaniesController::class, 'deleteUserfromCompany']);
         Route::post('users_companies/addGrouptoCompany', [UsersCompaniesController::class, 'addGrouptoCompany']);
         
         Route::post('users_groups/getGroups', [UsersGroupsController::class, 'getGroups']);
         Route::post('users_groups/getUsers', [UsersGroupsController::class, 'getUsers']);
         Route::post('users_groups/addUsertoGroup', [UsersGroupsController::class, 'addUsertoGroup']);
-        Route::post('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);
+        Route::delete('users_groups/deleteUserfromGroup', [UsersGroupsController::class, 'deleteUserfromGroup']);
         Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
         Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
         Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
-        Route::post('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
+        Route::delete('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
         Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
         Route::get('payments/ipn', [PaymentController::class, 'ipn']);
         Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod']);

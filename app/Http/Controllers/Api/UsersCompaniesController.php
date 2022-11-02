@@ -109,8 +109,8 @@ class UsersCompaniesController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'company_id' => 'required|integer',
-            'group_id' => 'required|integer',
+            'company_id' => 'required|uuid',
+            'group_id' => 'required|uuid',
         ]);
         
         if($validator->fails()){

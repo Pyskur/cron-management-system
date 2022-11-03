@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\UsersGroups;
+use App\Models\UsersCompanies;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -140,6 +142,113 @@ class CompanyController extends Controller
     public function destroy(Company $company)
     {
         $company->delete();
+        return response()->json();
+    }
+
+    public function getUsers(Company $company){
+        return response()->json($company->users);
+    }
+
+    public function addUsertoCompany(Request $request)
+    {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'company_id' => 'required|uuid',
+            'user_id' => 'required|uuid',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $user_company = UsersCompanies::create($input);
+            return response()->json($user_company);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "UsersCompanies store error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
+    }
+
+    public function addGrouptoCompany(Request $request)
+    {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'company_id' => 'required|uuid',
+            'group_id' => 'required|uuid',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        try {
+            $companies = array();
+            $users = UsersGroups::where('group_id', $input['group_id'])->pluck('user_id');
+            foreach($users as $user)
+            {
+                $companies[] = UsersCompanies::create(['user_id' => $user, 'company_id' => $input['company_id']]);
+            }
+            return response()->json($companies);
+        } catch (\Exception $e) {
+            if (App::environment('local')) {
+                $message = $e->getMessage();
+            }
+            else{
+                $message = "UsersCompanies store error";
+            }
+            return response()->json([
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $message
+            ]);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteUserfromCompany(Request $request)
+    {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'company_id' => 'required|uuid',
+            'user_id' => 'required|uuid',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        UsersCompanies::where('company_id', $input['company_id'])->where('user_id', $input['user_id'])->delete();
+
         return response()->json();
     }
 }

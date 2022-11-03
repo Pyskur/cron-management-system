@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Validator;
 use App\Models\User;
 use App\Models\Key;
+use App\Models\UsersLoginIps;
 
 class AuthController extends Controller
 {
@@ -84,6 +85,17 @@ class AuthController extends Controller
         if (Auth::attempt($userdata, $request->remember)) {
             $user = Auth::user();
             $token = $user->createToken('veri_token')->plainTextToken;
+            $user_id = User::firstWhere('email', $request->email)->id;
+            $user_ip = $request->ip();
+            $blacklistips = new BlacklistIpsController;
+            if (!$blacklistips->isBlocked(['login_ip' => $user_ip])) {
+                $logindata = [
+                    'user_id' => $user_id,
+                    'login_ip' => $user_ip,
+                    'login_at' => new \DateTime("now"),
+                ];
+                UsersLoginIps::create($logindata);    
+            }
             return response()->json([
                 'api_token' => $token
             ], 200);

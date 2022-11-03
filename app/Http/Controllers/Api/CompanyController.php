@@ -90,7 +90,7 @@ class CompanyController extends Controller
      */
     public function update(Request $request, Company $company)
     {
-        $input = $request->all();        
+        $input = $request->all();
 
         $validator = Validator::make($input, [
             'name' => 'string|max:50',

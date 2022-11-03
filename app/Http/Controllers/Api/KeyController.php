@@ -50,6 +50,7 @@ class KeyController extends Controller
             'ignore_limits' => 'required|numeric',
             'is_private_key' => 'required|numeric',
             'ip_address' => 'string|regex:/^(\[.*\])$/',
+            'permissions' => 'string|regex:/^(\[.*\])$/',
         ]);
 
         
@@ -65,6 +66,10 @@ class KeyController extends Controller
             $input['user_id'] = Auth::user()->id;
             $input['key'] = (new Token())->Unique('keys', 'key', 32);
             $input['ip_address'] = json_decode($input['ip_address']);
+            if($input['permissions'] == null)
+                $input['permissions'] = [];
+            else
+                $input['permissions'] = json_decode($input['permissions']);
             //TODO key_smses
             //
             //$input['keys_sms_id'] = '';
@@ -125,6 +130,7 @@ class KeyController extends Controller
                 'ignore_limits' => 'nullable|numeric',
                 'is_private_key' => 'nullable|numeric',
                 'ip_address' => 'string|regex:/^(\[.*\])$/',
+                'permissions' => 'string|regex:/^(\[.*\])$/',
             ]);
             //TODO key_smses
             //
@@ -150,6 +156,7 @@ class KeyController extends Controller
 
             try {
                 $input['ip_address'] = json_decode($input['ip_address']);
+                $input['permissions'] = json_decode($input['permissions']);
                 $key->update($input);
                 return response()->json($key);
             } catch (\Exception $e) {

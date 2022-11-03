@@ -120,9 +120,11 @@ class AuthController extends Controller
                     'message' => "Login from your localtion {$clientIpAddr} is not allowed.",
                 ], 400);
             }
+
+            $abilities = $key->permissions;
             Auth::login($key->user);
             $user = Auth::user();
-            $token = $user->createToken('veri_token')->plainTextToken;
+            $token = $user->createToken('veri_token', ['apikey', ...$abilities])->plainTextToken;
             return response()->json([
                 'api_token' => $token
             ], 200);

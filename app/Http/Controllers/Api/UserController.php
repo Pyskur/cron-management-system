@@ -18,8 +18,15 @@ class UserController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Api Key has no permission about User.'
+            ]);
+        }
         //
-        if(Auth::user()->isAdmin()){
+        if($user->isAdmin()){
             $users = User::all();
             return response()->json($users);
         }
@@ -51,51 +58,67 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
-
-        $validator = Validator::make($input, [
-            'name' => 'required|string|min:3|max:50',
-            'email' => 'required|string|email|max:100|unique:users',
-            'first_name' => 'required|string|min:3|max:50',
-            'last_name' => 'required|string|min:3|max:50',
-            'country_id' => 'required|numeric',
-            'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
-            'language' => 'required|string|min:3|max:50',
-        ]);
-        if($validator->fails()){
+        $user = Auth::user();
+        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
             return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+                'error'=> 'Error',
+                'message' => 'Api Key has no permission about User.'
             ]);
         }
 
-        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
-        $customer_info = $stripe->customers->create([
-            'description' => 'Veri User',
-            'email' => $request->email,
-            'phone' => $request->phone,
-        ]);
+        if($user->isAdmin()){
+            $input = $request->all();
 
-        $newdata = [
-            'name'=> $request->name,
-            'email'=> $request->email,
-            'first_name'=> $request->first_name,
-            'last_name'=> $request->last_name,
-            'country_id'=> $request->country_id,
-            'password'=> bcrypt($request->password),
-            'phone'=> $request->phone,
-			'language'=> $request->language,
-            'stripe_cust_id' => $customer_info->id,
-        ];
+            $validator = Validator::make($input, [
+                'name' => 'required|string|min:3|max:50',
+                'email' => 'required|string|email|max:100|unique:users',
+                'first_name' => 'required|string|min:3|max:50',
+                'last_name' => 'required|string|min:3|max:50',
+                'country_id' => 'required|numeric',
+                'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+                'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+                'language' => 'required|string|min:3|max:50',
+            ]);
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
 
-        $user = User::create($newdata);
+            $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+            $customer_info = $stripe->customers->create([
+                'description' => 'Veri User',
+                'email' => $request->email,
+                'phone' => $request->phone,
+            ]);
 
-        $sms = new SmsController;
-        $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
+            $newdata = [
+                'name'=> $request->name,
+                'email'=> $request->email,
+                'first_name'=> $request->first_name,
+                'last_name'=> $request->last_name,
+                'country_id'=> $request->country_id,
+                'password'=> bcrypt($request->password),
+                'phone'=> $request->phone,
+                'language'=> $request->language,
+                'stripe_cust_id' => $customer_info->id,
+            ];
 
-        return response()->json($user);
+            $user = User::create($newdata);
+
+            $sms = new SmsController;
+            $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
+
+            return response()->json($user);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }     
     }
 
     /**
@@ -106,6 +129,14 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        $user = Auth::user();
+        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Api Key has no permission about User.'
+            ]);
+        }
+
         if(Auth::user()->isAdmin())
         {
             return response()->json($user);
@@ -156,6 +187,14 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $user = Auth::user();
+        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Api Key has no permission about User.'
+            ]);
+        }
+        
         $input = $request->all();
         $validator = Validator::make($input, [
             'name' => 'nullable|string|min:3|max:50',
@@ -267,7 +306,15 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy(User $user)
-    {
+    {        
+        $user = Auth::user();
+        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Api Key has no permission about User.'
+            ]);
+        }
+
         if(Auth::user()->isAdmin() || Auth::user()->id == $user->id)
         {
             $user->delete();

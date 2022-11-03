@@ -37,6 +37,6 @@ class VerificationSendMailJob implements ShouldQueue
       Mail::to($this->data['email'])->send(new VerificationMail($this->data));
 
       $user = new UserController;
-      $user->updateBalance($this->data['email'], 'sms');
+      $user->updateBalance($this->data['email'], 'Otp');
     }
 }

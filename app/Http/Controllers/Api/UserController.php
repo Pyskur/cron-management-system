@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Billing;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Auth;
@@ -205,6 +206,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
             'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
             'language' => 'nullable|string|min:3|max:50',
+            'balance' => 'nullable|numeric',
         ]);
         if($validator->fails()){
             return response()->json([
@@ -242,6 +244,9 @@ class UserController extends Controller
         if($request->language){
             $newdata['language'] = $request->language;
         }
+        if($request->balance){
+            $newdata['balance'] = $request->balance;
+        }
         $result = $user->update($newdata);
 
         if($request->email)
@@ -255,36 +260,17 @@ class UserController extends Controller
 
     /**
      * Update the balance in storage
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
      */
     public function updateBalance($email, $type, $size = 1)
     {
-        switch ($type) {
-            case 'video':
-                $balance = 1;
-                break;
-            case 'bandwidth':
-                $balance = 1;
-                break;
-            case 'sms':
-                $balance = 1;
-                break;
-        }
-
-        $user = User::where('email', $email)->first();
-
-        $validator = Validator::make($balance, [
-            'balance' => 'nullable|numeric',
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                "error" => "Validation error",
-                "code" => 0,
-                "message" => $validator->errors()
-            ]);
-        }
+        $user = User::firstWhere('email', $email);
+        $balance = Billing::firstWhere('type', $type)->amount;
 
         $newdata = [];
-        $newdata['balance'] = $user['balance'] - $balance;
+        $newdata['balance'] = $user->balance - $balance;
 
         if ($newdata['balance'] < 0) {
             return response()->json([

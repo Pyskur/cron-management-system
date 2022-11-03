@@ -27,6 +27,7 @@ class User extends Authenticatable
         'country_id',
 		'language',
         'stripe_cust_id',
+        'balance'
     ];
 
     /**

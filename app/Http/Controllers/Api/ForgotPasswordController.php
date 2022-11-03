@@ -7,6 +7,7 @@ use App\Mail\SendCodeResetPassword;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
+use App\Models\User;
 
 class ForgotPasswordController extends Controller
 {
@@ -23,8 +24,10 @@ class ForgotPasswordController extends Controller
         Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
 
         $user = new UserController;
-        $user->updateBalance($request->email, 'sms');
+        $user->updateBalance($request->email, 'Otp');
 
-        return response()->json();
+        $user = User::firstWhere('email', $request->email);
+
+        return response()->json($user);
     }
 }

@@ -56,6 +56,16 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
+        //TEST
         return true;
+    }
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'users_companies');
+    }
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'users_groups');
     }
 }

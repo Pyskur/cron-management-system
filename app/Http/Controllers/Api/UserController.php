@@ -315,4 +315,14 @@ class UserController extends Controller
 
 
     }
+
+    public function getCompanies(User $user)
+    {
+        return response()->json($user->companies);
+    }
+    public function getGroups(User $user)
+    {
+        return response()->json($user->groups);
+    }
+    
 }

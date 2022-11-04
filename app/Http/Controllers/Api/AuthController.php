@@ -87,15 +87,32 @@ class AuthController extends Controller
             $token = $user->createToken('veri_token')->plainTextToken;
             $user_id = User::firstWhere('email', $request->email)->id;
             $user_ip = $request->ip();
-            $blacklistips = new BlacklistIpsController;
-            if (!$blacklistips->isBlocked(['login_ip' => $user_ip])) {
-                $logindata = [
-                    'user_id' => $user_id,
-                    'login_ip' => $user_ip,
-                    'login_at' => new \DateTime("now"),
-                ];
-                UsersLoginIps::create($logindata);    
+            $configure = new ConfigureController;
+            $whitelistenabled = $configure->isEnabled(['name' => 'whitelistip']);
+            if ($whitelistenabled) {
+                $whitelistips = new WhitelistIpsController;
+                if (!$whitelistips->isAllowed(['login_ip' => $user_ip])) {
+                    return response()->json([
+                        'code' => false,
+                        'message' => 'IP check failed',
+                    ], 400);     
+                }
+            } else {
+                $blacklistips = new BlacklistIpsController;
+                if ($blacklistips->isBlocked(['login_ip' => $user_ip])) {
+                    return response()->json([
+                        'code' => false,
+                        'message' => 'IP check failed',
+                    ], 400);
+                }
             }
+            $logindata = [
+                'user_id' => $user_id,
+                'login_ip' => $user_ip,
+                'login_at' => new \DateTime("now"),
+            ];
+            UsersLoginIps::create($logindata);    
+
             return response()->json([
                 'api_token' => $token
             ], 200);

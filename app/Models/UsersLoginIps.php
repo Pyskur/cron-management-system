@@ -14,4 +14,9 @@ class UsersLoginIps extends Model
         'login_ip',
         'login_at',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -21,6 +21,11 @@ class Key extends Model
         'keys_sms_id'
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     protected $casts = [
         'ip_address' => 'array',
         'permissions' => 'array',

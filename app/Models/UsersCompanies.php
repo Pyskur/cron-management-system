@@ -13,4 +13,9 @@ class UsersCompanies extends Model
         'user_id',
         'company_id',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

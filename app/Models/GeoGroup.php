@@ -16,6 +16,11 @@ class GeoGroup extends Model
         'aws_cloudfront_distribution_id'
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function countries()
     {
         return $this->belongsToMany(Country::class, 'country_geo_group_maps');

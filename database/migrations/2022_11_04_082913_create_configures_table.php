@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('configures', function (Blueprint $table) {
-            $table->uuid()->primary();
+            $table->id();
             $table->string('name');
             $table->boolean('enabled')->default(true);
             $table->timestamps();

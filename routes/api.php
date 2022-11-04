@@ -45,7 +45,7 @@ use App\Http\Controllers\Api\VideoPlayerController;
 Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
 
     Route::middleware('throttle:auth')->group(function () {
-        Route::get('/auth', function (Request $request) {
+        Route::get('/auth/user', function (Request $request) {
             return $request->user();
         
         });

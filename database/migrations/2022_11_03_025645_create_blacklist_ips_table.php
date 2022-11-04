@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('blacklist_ips', function (Blueprint $table) {
-            $table->uuid()->primary();
+            $table->id();
             $table->string('ip_address');
             $table->boolean('enabled')->default(true);
             $table->timestamps();

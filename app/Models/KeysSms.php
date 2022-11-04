@@ -15,4 +15,8 @@ class KeysSms extends Model
         'status',
         'friendly_name',
     ];
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

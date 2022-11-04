@@ -17,4 +17,9 @@ class HttpSetting extends Model
         'message_body',
         'headers'
      ];
+
+     protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -25,4 +25,9 @@ class Cron extends Model
         'timezone',
         'location',
      ];
+
+     protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

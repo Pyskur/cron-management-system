@@ -15,4 +15,8 @@ class Limit extends Model
         'hour_started',
         'api_key'
      ];
+     protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

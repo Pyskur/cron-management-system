@@ -27,4 +27,9 @@ class Order extends Model
         'card_st_digit',
         'user_id'
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

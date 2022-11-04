@@ -31,6 +31,11 @@ class Video extends Model
         'thumbnail_count'
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function geoGroup()
     {
         return $this->belongsTo(GeoGroup::class);

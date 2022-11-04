@@ -13,4 +13,9 @@ class AutoRenew extends Model
         'auto_renew_amt',
         'auto_renewal'
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

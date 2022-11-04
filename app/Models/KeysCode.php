@@ -15,4 +15,9 @@ class KeysCode extends Model
         'otp_exp_time',
      ];
 
+     protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
 }

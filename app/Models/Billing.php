@@ -13,4 +13,9 @@ class Billing extends Model
         'type',
         'amount',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -13,4 +13,9 @@ class UsersNotifications extends Model
         'user_id',
         'notification_id',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

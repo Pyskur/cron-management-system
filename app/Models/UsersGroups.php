@@ -13,4 +13,9 @@ class UsersGroups extends Model
         'user_id',
         'group_id',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

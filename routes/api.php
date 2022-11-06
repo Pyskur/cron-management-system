@@ -99,7 +99,7 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::apiResource('countries', CountryController::class);
 
         //Video
-        Route::post('videos/new/upload', [VideoController::class, 'uploadVideo']);
+        Route::post('videos/upload', [VideoController::class, 'uploadVideo']);
         Route::post('videos/test', [VideoController::class, 'test']);
         Route::post('videos/init-table', [VideoController::class, 'initTable']);
         Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);

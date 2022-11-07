@@ -92,8 +92,8 @@ class VideoController extends Controller
                 'drm_enabled' => 'numeric',
                 'publish_date' => 'date_format:Y-m-d H:i:s',
                 'unpublish_date' => 'date_format:Y-m-d H:i:s',
-                'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
-                'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
+                'black_list' => 'string|regex:/^(\[[a-z0-9, \-\"]*\])$/',
+                'white_list' => 'string|regex:/^(\[[a-z0-9, \-\"]*\])$/'
             ]);
 
             if($validator->fails()){
@@ -252,8 +252,8 @@ class VideoController extends Controller
             'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
             'publish_date' => 'date_format:Y-m-d H:i:s',
             'unpublish_date' => 'date_format:Y-m-d H:i:s',
-            'black_list' => 'string|regex:/^(\[[0-9,]*\])$/',
-            'white_list' => 'string|regex:/^(\[[0-9,]*\])$/'
+            'black_list' => 'string|regex:/^(\[[a-z0-9, \-\"]*\])$/',
+            'white_list' => 'string|regex:/^(\[[a-z0-9, \-\"]*\])$/'
         ]);
 
         if($validator->fails()){
@@ -488,14 +488,13 @@ class VideoController extends Controller
         ]);
 
         ////create new country_geo_group_maps with geogroup.id and countryIDList
-        $addData = [];
         foreach($countryIDList as $country){
-            $addData[] = [
+            $addData = [
                 'country_id' => $country,
                 'geo_group_id' => $newGeoGroup->id
             ];   
+            CountryGeoGroupMap::create($addData);
         }
-        CountryGeoGroupMap::insert($addData);
         return $newGeoGroup->id;
     }
 
@@ -947,12 +946,14 @@ class VideoController extends Controller
     {
 
         //Test
-        return response()->json([
-            $request->ip(),
-            \Request::getClientIp(true),
-            \Request::ip(),
-            $_SERVER
-        ]);
+        $data = [
+            'id'=> \Ramsey\Uuid\Uuid::uuid4()->toString(),
+        'country_id' => '6671ccb8-2634-47b6-bc55-4d2d6f7b9585',
+        'geo_group_id' => 'cbe86e77-e45e-4b8f-9bcf-05c1f3ae8491'
+            ];   
+
+        CountryGeoGroupMap::insert($data);
+        return response()->json(["result"=> "success"]);
     }
 
 }

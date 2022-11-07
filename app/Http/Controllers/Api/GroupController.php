@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\UsersGroups;
 use Illuminate\Http\Request;
 use Validator;
+use Illuminate\Support\Facades\Auth;
 
 class GroupController extends Controller
 {
@@ -131,6 +132,23 @@ class GroupController extends Controller
         return response()->json($group->users);
     }
 
+    public function initGroups(Request $request){
+        if(Auth::user()->isAdmin()){
+            Group::create(['name'=>'developers', 'description' =>'developers']);
+            Group::create(['name'=>'administrators', 'description' =>'administrators']);
+            Group::create(['name'=>'finance_staff', 'description' =>'finance staff']);
+            Group::create(['name'=>'support_agents ', 'description' =>'support agents ']);
+            Group::create(['name'=>'customers', 'description' =>'customers']);
+            Group::create(['name'=>'3rd_party_developers', 'description' =>'3rd party developers']);
+            return response()->json(["result"=>"success"]);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+    }
     /**
      * Add a user to a group.
      *

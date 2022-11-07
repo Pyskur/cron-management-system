@@ -64,11 +64,12 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::delete('companies/delete-user', [CompanyController::class, 'deleteUserfromCompany']);
         Route::post('companies/add-group', [CompanyController::class, 'addGrouptoCompany']);
         
+        Route::post('groups/init', [GroupController::class, 'initGroups']);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups']);
         Route::get('groups/{group}/users', [GroupController::class, 'getUsers']);
         Route::post('groups/add-user', [GroupController::class, 'addUsertoGroup']);
         Route::delete('groups/delete-user', [GroupController::class, 'deleteUserfromGroup']);
-
+        
         Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
         Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
         Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);

@@ -7,6 +7,7 @@ use Validator;
 use App\Models\User;
 use App\Models\Key;
 use App\Models\UsersLoginIps;
+use App\Models\UsersApiHistories;
 
 class AuthController extends Controller
 {
@@ -108,10 +109,10 @@ class AuthController extends Controller
             }
             $logindata = [
                 'user_id' => $user_id,
-                'login_ip' => $user_ip,
-                'login_at' => new \DateTime("now"),
+                'ip' => $user_ip,
+                'api_path' => '',
             ];
-            UsersLoginIps::create($logindata);    
+            // UsersApiHistories::create($logindata);
 
             return response()->json([
                 'api_token' => $token

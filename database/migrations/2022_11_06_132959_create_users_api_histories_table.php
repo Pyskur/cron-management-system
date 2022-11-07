@@ -13,12 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users_login_ips', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
+        Schema::create('users_api_histories', function (Blueprint $table) {
+            $table->id();
+            $table->uuid('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users');
-            $table->string('login_ip');
-            $table->timestamp('login_at');
+            $table->string('ip');
+            $table->string('api_path');
+            $table->string('method');
             $table->timestamps();
         });
     }
@@ -30,6 +31,7 @@ return new class extends Migration
      */
     public function down()
     {
+        Schema::dropIfExists('users_api_histories');
         Schema::dropIfExists('users_login_ips');
     }
 };

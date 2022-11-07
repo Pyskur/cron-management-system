@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 
-class UsersLoginIps extends Model
+class UsersApiHistories extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'login_ip',
-        'login_at',
+        'ip',
+        'api_path',
+        'method',
     ];
 }

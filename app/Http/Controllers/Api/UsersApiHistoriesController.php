@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
-use App\Models\UsersLoginIps;
+use App\Models\UsersApiHistories;
 use Illuminate\Http\Request;
 use Validator;
 
-class UsersLoginIpsController extends Controller
+class UsersApiHistoriesController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -44,10 +44,10 @@ class UsersLoginIpsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\UsersLoginIps  $usersLoginIps
+     * @param  \App\Models\UsersApiHistories  $usersApiHistories
      * @return \Illuminate\Http\Response
      */
-    public function show(UsersLoginIps $usersLoginIps)
+    public function show(UsersApiHistories $usersApiHistories)
     {
         //
     }
@@ -55,10 +55,10 @@ class UsersLoginIpsController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\UsersLoginIps  $usersLoginIps
+     * @param  \App\Models\UsersApiHistories  $usersApiHistories
      * @return \Illuminate\Http\Response
      */
-    public function edit(UsersLoginIps $usersLoginIps)
+    public function edit(UsersApiHistories $usersApiHistories)
     {
         //
     }
@@ -67,10 +67,10 @@ class UsersLoginIpsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UsersLoginIps  $usersLoginIps
+     * @param  \App\Models\UsersApiHistories  $usersApiHistories
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, UsersLoginIps $usersLoginIps)
+    public function update(Request $request, UsersApiHistories $usersApiHistories)
     {
         //
     }
@@ -78,10 +78,10 @@ class UsersLoginIpsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\UsersLoginIps  $usersLoginIps
+     * @param  \App\Models\UsersApiHistories  $usersApiHistories
      * @return \Illuminate\Http\Response
      */
-    public function destroy(UsersLoginIps $usersLoginIps)
+    public function destroy(UsersApiHistories $usersApiHistories)
     {
         //
     }

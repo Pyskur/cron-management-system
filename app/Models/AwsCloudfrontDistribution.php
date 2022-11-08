@@ -16,4 +16,9 @@ class AwsCloudfrontDistribution extends Model
         'alt_domain_name',
         'origin'
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

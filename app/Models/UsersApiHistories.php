@@ -15,4 +15,9 @@ class UsersApiHistories extends Model
         'api_path',
         'method',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

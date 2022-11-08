@@ -13,4 +13,9 @@ class CountryGeoGroupMap extends Model
         'country_id',
         'geo_group_id'
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -15,4 +15,9 @@ class Epd extends Model
         'epd_daily',
         'service_type'
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

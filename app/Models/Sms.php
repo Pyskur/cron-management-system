@@ -22,4 +22,9 @@ class Sms extends Model
         'key_id',
         'code_variable',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -27,6 +27,7 @@ class User extends Authenticatable
         'country_id',
 		'language',
         'stripe_cust_id',
+        'balance'
     ];
 
     /**
@@ -34,9 +35,12 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+
     protected $hidden = [
         'password',
         'remember_token',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -55,6 +59,16 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
+        //TEST
         return true;
+    }
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'users_companies');
+    }
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'users_groups');
     }
 }

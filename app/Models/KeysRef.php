@@ -13,4 +13,8 @@ class KeysRef extends Model
         'ref2',
         'ref3',
      ];
+     protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -14,6 +14,11 @@ class ResetCodePassword extends Model
         'code',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     /**
      * check if the code is expire then delete
      *

@@ -38,6 +38,6 @@ class LeadSendmailJob implements ShouldQueue
       Mail::to('daniellihm03@gmail.com')->send(new LeadMail($this->data));
 
       $user = new UserController;
-      $user->updateBalance('daniellihm03@gmail.com', 'sms');
+      $user->updateBalance('daniellihm03@gmail.com', 'Otp');
     }
 }

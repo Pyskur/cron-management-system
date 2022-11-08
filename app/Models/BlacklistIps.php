@@ -13,4 +13,9 @@ class BlacklistIps extends Model
         'ip_address',
         'enabled',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -12,6 +12,7 @@ class Key extends Model
     protected $fillable = [
         'title',
         'key',
+        'permissions',
         'level',
         'ignore_limits',
         'is_private_key',
@@ -20,8 +21,14 @@ class Key extends Model
         'keys_sms_id'
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     protected $casts = [
-        'ip_address' => 'array'
+        'ip_address' => 'array',
+        'permissions' => 'array',
     ];
 
     public function user()

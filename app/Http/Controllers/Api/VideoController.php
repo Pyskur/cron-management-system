@@ -784,49 +784,7 @@ class VideoController extends Controller
             return [];
         }
     }
-    public function initTable(Request $request)
-    {
-        if(Auth::user()->isAdmin()){
-            $globalGeoGroup = GeoGroup::where('is_global', true)->first();
-            if($globalGeoGroup){
-                return response()->json([
-                    "type" => "Failed",
-                    "result" => 'There is already global GeoGroup table.'
-                ]);
-            }
-            else{
-                $data = [
-                    'dist_id' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ID'),
-                    'description' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DESCRIPTION'),
-                    'domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_DOMAINNAME'),
-                    'alt_domain_name' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ALTDOMAINNAME'),
-                    'origin' => env('AWS_CLOUDFRONT_DISTRIBUTION_GLOBAL_ORIGIN'),
-                ]; 
-                $newAwsCloudfrontDistribution = AwsCloudfrontDistribution::create($data);
 
-                $newGeoGroup = GeoGroup::create([
-                    'is_blacklist' => false,
-                    'is_global' => true,
-                    'uuid'=> (string) Str::uuid(),
-                    'aws_cloudfront_distribution_id' =>$newAwsCloudfrontDistribution->id
-                ]);
-                return response()->json([
-                    "type" => "Success",
-                    "result" => 'Init Process is finished successfully.',
-                    "data"=>[
-                        "global_geo_group_id" => $newGeoGroup->id,
-                        "global_aws_cloudfront_distribution_id" => $newAwsCloudfrontDistribution->id
-                    ]
-                ]);
-            }
-        }
-        else{
-            return response()->json([
-                'error'=> 'Error',
-                'message' => 'Not Authorized.'
-            ]);
-        }
-    }
     public function getStatus(Video $video)
     {
         if(Auth::user()->isAdmin() || Auth::user()->id == $video->user_id)

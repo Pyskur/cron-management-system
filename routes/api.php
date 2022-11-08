@@ -64,7 +64,6 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::delete('companies/delete-user', [CompanyController::class, 'deleteUserfromCompany']);
         Route::post('companies/add-group', [CompanyController::class, 'addGrouptoCompany']);
         
-        Route::post('groups/init', [GroupController::class, 'initGroups']);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups']);
         Route::get('groups/{group}/users', [GroupController::class, 'getUsers']);
         Route::post('groups/add-user', [GroupController::class, 'addUsertoGroup']);
@@ -102,7 +101,6 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         //Video
         Route::post('videos/upload', [VideoController::class, 'uploadVideo']);
         Route::post('videos/test', [VideoController::class, 'test']);
-        Route::post('videos/init-table', [VideoController::class, 'initTable']);
         Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
         Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
         Route::get('videos/by-path', [VideoController::class, 'getVideosByPath']);

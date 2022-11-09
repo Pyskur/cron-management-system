@@ -59,8 +59,13 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        //TEST
-        return true;
+
+        $groups = $this->groups;
+        foreach ($groups as $key => $group) {
+            if ($group->name == "administrators")
+                return true;
+        }
+        return false;
     }
 
     public function companies()

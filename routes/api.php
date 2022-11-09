@@ -30,7 +30,7 @@ use App\Http\Controllers\Api\UsersGroupsController;
 use App\Http\Controllers\Api\UsersNotificationsController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VideoPlayerController;
-
+use Illuminate\Support\Facades\Auth;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -116,6 +116,11 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
     Route::middleware('throttle:security')->group(function () {
         //Place route here
     });
+
+    Route::get('/test', function (Request $request) {
+        return response()->json(['admin'=>Auth::user()->isAdmin()]);
+    
+    });
     
 });
 Route::post('videos/test-noauth', [VideoController::class, 'test']);
@@ -137,3 +142,4 @@ Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackU
 Route::apiResource('video_players', VideoPlayerController::class)->only([
     'show'
 ]);
+

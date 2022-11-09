@@ -29,7 +29,18 @@ class RequestLoggerMiddleware
         $logEntry->api_path = $request->fullUrl();
         $logEntry->method = $request->method();
 
-        $logEntry->save();    
+        $logEntry->save();
+
+        $dynamodbClient = \AWS::createClient('DynamoDB');
+        $dynamodbClient->putItem([
+            'Item' => [
+                'user_id' => $user_id,
+                'ip' => $request->ip(),
+                'api_path' => $request->fullUrl(),
+                'method' => $request->method(),
+            ],
+            'TableName' => 'users_api_histories',
+        ]);
 
         return $next($request);
     }

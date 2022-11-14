@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\UsersApiHistories;
 
 class RequestLoggerMiddleware
@@ -34,10 +35,21 @@ class RequestLoggerMiddleware
         $dynamodbClient = \AWS::createClient('DynamoDB');
         $dynamodbClient->putItem([
             'Item' => [
-                'user_id' => $user_id,
-                'ip' => $request->ip(),
-                'api_path' => $request->fullUrl(),
-                'method' => $request->method(),
+                'id' => [
+                    'S' => (string) Str::uuid()
+                ],
+                'user_id' => [
+                    'S' => $user_id ?? ''
+                ],
+                'ip' => [
+                    'S' => $request->ip()
+                ],
+                'api_path' => [
+                    'S' => $request->fullUrl()
+                ],
+                'method' => [
+                    'S' => $request->method()
+                ],
             ],
             'TableName' => 'users_api_histories',
         ]);

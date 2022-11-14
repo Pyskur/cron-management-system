@@ -320,6 +320,18 @@ Artisan::command('db:setup', function () {
         }
         $this->info("--Country Table Done");
 
+        $dynamodbClient = \AWS::createClient('DynamoDB');
+        try {
+            $tableName = 'users_api_histories';
+            $dynamodbClient->createTable([
+                'TableName' => $tableName,
+            ]);
+        } catch (AwsException $e) {
+            return [
+                'Error' => 'Error: ' . $e->getAwsErrorMessage()
+            ];
+        }
+
         //Mark setup is done
         if($setupDone == null){
             Configure::create([

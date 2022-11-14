@@ -85,7 +85,17 @@ class AuthController extends Controller
 
         if (Auth::attempt($userdata, $request->remember)) {
             $user = Auth::user();
-            $token = $user->createToken('veri_token')->plainTextToken;
+            $abilities = [];
+            foreach ($user->groups as $group) {
+                $permissions = $group->permissions;
+                if($permissions == null)
+                    $permissions = [];
+                $abilities = array_unique(array_merge($abilities, $permissions));
+            }
+            if(in_array("*", $abilities))
+                $abilities = ["*"];
+            
+            $token = $user->createToken('veri_token', $abilities)->plainTextToken;
             $user_id = User::firstWhere('email', $request->email)->id;
             $user_ip = $request->ip();
             $configure = new ConfigureController;

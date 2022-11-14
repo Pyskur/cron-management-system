@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\UsersNotificationsController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VideoPlayerController;
 use Illuminate\Support\Facades\Auth;
+use App\Permissions\Permission;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -42,7 +43,7 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware('throttle:auth')->group(function () {
         Route::get('/auth/user', function (Request $request) {
@@ -51,20 +52,18 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         });
         Route::delete('auth/logout', [AuthController::class,'logout']);
         
-        
-        Route::apiResource('sms', SmsController::class);
-        
         Route::get('report/daily_report', [ReportController::class, 'daily_report']);
         Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
         Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
         
         Route::get('users/{user}/companies', [UserController::class, 'getCompanies']);
+        Route::get('users/{user}/groups', [UserController::class, 'getGroups']);
+
         Route::get('companies/{company}/users', [CompanyController::class, 'getUsers']);
         Route::post('companies/add-user', [CompanyController::class, 'addUsertoCompany']);
         Route::delete('companies/delete-user', [CompanyController::class, 'deleteUserfromCompany']);
         Route::post('companies/add-group', [CompanyController::class, 'addGrouptoCompany']);
         
-        Route::get('users/{user}/groups', [UserController::class, 'getGroups']);
         Route::get('groups/{group}/users', [GroupController::class, 'getUsers']);
         Route::post('groups/add-user', [GroupController::class, 'addUsertoGroup']);
         Route::delete('groups/delete-user', [GroupController::class, 'deleteUserfromGroup']);
@@ -73,8 +72,9 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
         Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
         Route::delete('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
+        
         Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
-        Route::get('payments/ipn', [PaymentController::class, 'ipn']);
+        Route::get('payments/i  pn', [PaymentController::class, 'ipn']);
         Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod']);
         Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);
         Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);
@@ -82,6 +82,14 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
         Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);
     
+        //Video
+        Route::post('videos/upload', [VideoController::class, 'uploadVideo'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_UPLOAD]);
+        Route::post('videos/test', [VideoController::class, 'test']);
+        Route::get('videos/status/{video}', [VideoController::class, 'getStatus'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_STATUS]);
+        Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_THUMBNAILS]);
+        Route::get('videos/by-path', [VideoController::class, 'getVideosByPath'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_BYPATH]);
+        Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
+
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);
         Route::apiResource('keys', KeyController::class);
@@ -97,17 +105,10 @@ Route::middleware(['auth:sanctum', 'throttle:auth'])->group(function () {
         Route::apiResource('limits', LimitController::class);
         Route::apiResource('orders', OrderController::class);
         Route::apiResource('countries', CountryController::class);
-
-        //Video
-        Route::post('videos/upload', [VideoController::class, 'uploadVideo']);
-        Route::post('videos/test', [VideoController::class, 'test']);
-        Route::get('videos/status/{video}', [VideoController::class, 'getStatus']);
-        Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList']);
-        Route::get('videos/by-path', [VideoController::class, 'getVideosByPath']);
-        Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
-        Route::apiResource('videos', VideoController::class);
-    
-        
+        Route::apiResource('sms', SmsController::class);
+        Route::apiResource('videos', VideoController::class)->except([
+            'store'
+        ]);
         Route::apiResource('video_players', VideoPlayerController::class)->except([
             'show'
         ]);

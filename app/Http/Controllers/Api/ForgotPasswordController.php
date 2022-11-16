@@ -21,7 +21,8 @@ class ForgotPasswordController extends Controller
 
         $codeData = ResetCodePassword::create($request->data());
 
-        Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
+        Mail::to($request->email)->queue(new SendCodeResetPassword($codeData->code));
+        // Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
 
         $user = new UserController;
         $user->updateBalance($request->email, 'Otp');

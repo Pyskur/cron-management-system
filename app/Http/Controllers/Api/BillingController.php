@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Billing;
 use Illuminate\Http\Request;
 use Validator;
-
+use App\Permissions\Permission;
 class BillingController extends Controller
 {
     /**
@@ -17,8 +17,17 @@ class BillingController extends Controller
      */
     public function index()
     {
-        $billings = Billing::all();
-        return response()->json($billings);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BILLING_INDEX)) {
+            $billings = Billing::all();
+            return response()->json($billings);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -39,35 +48,44 @@ class BillingController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BILLING_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'type' => 'string',
-            'amount' => 'numeric|between:0,99.99'
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'type' => 'string',
+                'amount' => 'numeric|between:0,99.99'
             ]);
-        }
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
 
-        try {
-            $billing = Billing::create($input);
-            return response()->json($billing);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
+            try {
+                $billing = Billing::create($input);
+                return response()->json($billing);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Billing store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
             }
-            else{
-                $message = "Billing store error";
-            }
+        }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -80,7 +98,16 @@ class BillingController extends Controller
      */
     public function show(Billing $billing)
     {
-        return response()->json($billing);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BILLING_SHOW)) {
+            return response()->json($billing);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -103,37 +130,46 @@ class BillingController extends Controller
      */
     public function update(Request $request, Billing $billing)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BILLING_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'type' => 'string',
-            'amount' => 'numeric|between:0,99.99'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                "error" => "Validation error",
-                "code" => 0,
-                "message" => $validator->errors()
+            $validator = Validator::make($input, [
+                'type' => 'string',
+                'amount' => 'numeric|between:0,99.99'
             ]);
-        }
 
-        try {
-            $billing->update($input);
-            return response()->json($billing);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
+            if ($validator->fails()) {
+                return response()->json([
+                    "error" => "Validation error",
+                    "code" => 0,
+                    "message" => $validator->errors()
+                ]);
             }
-            else{
-                $message = "Billing update error";
+
+            try {
+                $billing->update($input);
+                return response()->json($billing);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Billing update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
             }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
         }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }  
     }
 
     /**
@@ -144,7 +180,18 @@ class BillingController extends Controller
      */
     public function destroy(Billing $billing)
     {
-        $billing->delete();
-        return response()->json();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BILLING_DESTROY)) {
+            $billing->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+
+
     }
 }

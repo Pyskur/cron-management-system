@@ -20,14 +20,7 @@ class UserController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
-            return response()->json([
-                'error'=> 'Error',
-                'message' => 'Api Key has no permission about User.'
-            ]);
-        }
-        //
-        if($user->isAdmin()){
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_USER_INDEX)) {
             $users = User::all();
             return response()->json($users);
         }
@@ -37,8 +30,6 @@ class UserController extends Controller
                 'message' => 'Not Authorized.'
             ]);
         }
-
-
     }
 
     /**
@@ -60,14 +51,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
-            return response()->json([
-                'error'=> 'Error',
-                'message' => 'Api Key has no permission about User.'
-            ]);
-        }
-
-        if($user->isAdmin()){
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_USER_STORE)) {
             $input = $request->all();
 
             $validator = Validator::make($input, [
@@ -130,40 +114,41 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user = Auth::user();
-        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
-            return response()->json([
-                'error'=> 'Error',
-                'message' => 'Api Key has no permission about User.'
-            ]);
-        }
-
-        if(Auth::user()->isAdmin())
-        {
-            return response()->json($user);
-        }
-        else if(Auth::user()->id == $user->id){
-            return response()->json(
-                [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'active' => $user->active,
-                    'phone' => $user->phone,
-                    'rate' => $user->rate,
-                    'balance' => $user->balance,
-                    'is_verify' => $user->is_verify,
-                    'language' => $user->language,
-                    'country_id' => $user->country_id,
-                ]
-            );
+        $auth_user = Auth::user();
+        if ($auth_user->tokenCan(Permission::CAN_ALL) || $auth_user->tokenCan(Permission::CAN_USER_SHOW)) {
+            if($auth_user->isAdmin())
+            {
+                return response()->json($user);
+            }
+            else if($auth_user->id == $user->id){
+                return response()->json(
+                    [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'active' => $user->active,
+                        'phone' => $user->phone,
+                        'rate' => $user->rate,
+                        'balance' => $user->balance,
+                        'is_verify' => $user->is_verify,
+                        'language' => $user->language,
+                        'country_id' => $user->country_id,
+                    ]
+                );
+            }
+            else{
+                return response()->json([
+                    'error'=> 'Error',
+                    'message' => 'User is not owner.'
+                ]);
+            }
         }
         else{
             return response()->json([
                 'error'=> 'Error',
-                'message' => 'User is not owner.'
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -188,74 +173,84 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $user = Auth::user();
-        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
+        $auth_user = Auth::user();
+        if ($auth_user->tokenCan(Permission::CAN_ALL) || $auth_user->tokenCan(Permission::CAN_USER_UPDATE)) {
+            if($auth_user->isAdmin() || $auth_user->id == $user->id)
+            {
+                $input = $request->all();
+                $validator = Validator::make($input, [
+                    'name' => 'nullable|string|min:3|max:50',
+                    'email' => 'nullable|string|email|max:100|unique:users',
+                    'first_name' => 'nullable|string|min:3|max:50',
+                    'last_name' => 'nullable|string|min:3|max:50',
+                    'country_id' => 'nullable|numeric',
+                    'password' => 'nullable|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+                    'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
+                    'language' => 'nullable|string|min:3|max:50',
+                    'balance' => 'nullable|numeric',
+                ]);
+                if($validator->fails()){
+                    return response()->json([
+                        "error" => "Validation Error",
+                        "code"=> 0,
+                        "message"=> $validator->errors()
+                    ]);
+                }
+
+                $newdata = [];
+                if($request->name){
+                    $newdata['name'] = $request->name;
+                }
+                if($request->email){
+                    $newdata['email'] = $request->email;
+                }
+                if($request->first_name){
+                    $newdata['first_name'] = $request->first_name;
+                }
+                if($request->last_name){
+                    $newdata['last_name'] = $request->last_name;
+                }
+                if($request->company_id){
+                    $newdata['company_id'] = $request->company_id;
+                }
+                if($request->password){
+                    $newdata['password'] = bcrypt($request->password);
+                }
+                if($request->phone){
+                    $newdata['phone'] = $request->phone;
+                }
+                if($request->country_id){
+                    $newdata['country_id'] = $request->country_id;
+                }
+                if($request->language){
+                    $newdata['language'] = $request->language;
+                }
+                if($request->balance){
+                    $newdata['balance'] = $request->balance;
+                }
+                $result = $user->update($newdata);
+
+                if($request->email)
+                {
+                    $sms = new SmsController;
+                    $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
+                }
+
+                return response()->json($user);
+            }
+            else{
+                return response()->json([
+                    'error'=> 'Error',
+                    'message' => 'User is not owner.'
+                ]);
+            }
+        }
+        else{
             return response()->json([
                 'error'=> 'Error',
-                'message' => 'Api Key has no permission about User.'
+                'message' => 'Not Authorized.'
             ]);
-        }
-        
-        $input = $request->all();
-        $validator = Validator::make($input, [
-            'name' => 'nullable|string|min:3|max:50',
-            'email' => 'nullable|string|email|max:100|unique:users',
-            'first_name' => 'nullable|string|min:3|max:50',
-            'last_name' => 'nullable|string|min:3|max:50',
-            'country_id' => 'nullable|numeric',
-            'password' => 'nullable|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
-            'phone' => 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10',
-            'language' => 'nullable|string|min:3|max:50',
-            'balance' => 'nullable|numeric',
-        ]);
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        $newdata = [];
-        if($request->name){
-            $newdata['name'] = $request->name;
-        }
-        if($request->email){
-            $newdata['email'] = $request->email;
-        }
-        if($request->first_name){
-            $newdata['first_name'] = $request->first_name;
-        }
-        if($request->last_name){
-            $newdata['last_name'] = $request->last_name;
-        }
-        if($request->company_id){
-            $newdata['company_id'] = $request->company_id;
-        }
-        if($request->password){
-            $newdata['password'] = bcrypt($request->password);
-        }
-        if($request->phone){
-            $newdata['phone'] = $request->phone;
-        }
-        if($request->country_id){
-            $newdata['country_id'] = $request->country_id;
-        }
-        if($request->language){
-            $newdata['language'] = $request->language;
-        }
-        if($request->balance){
-            $newdata['balance'] = $request->balance;
-        }
-        $result = $user->update($newdata);
-
-        if($request->email)
-        {
-            $sms = new SmsController;
-            $sms->sendUserVerificationMessage_core(['user_id' => $user->id]);
-        }
-
-        return response()->json($user);
+        }       
     }
 
     /**
@@ -293,27 +288,19 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {        
-        $user = Auth::user();
-        if ($user->tokenCan('apikey') && !$user->tokenCan('user')) {
-            return response()->json([
-                'error'=> 'Error',
-                'message' => 'Api Key has no permission about User.'
-            ]);
-        }
-
-        if(Auth::user()->isAdmin() || Auth::user()->id == $user->id)
-        {
+        $auth_user = Auth::user();
+        if ($auth_user->isAdmin()) {
             $user->delete();
-            return response()->json();
+            return response()->json([
+                'message'=> 'Success'
+            ]);
         }
         else{
             return response()->json([
                 'error'=> 'Error',
-                'message' => 'User is not owner'
+                'message' => 'Not Authorized.'
             ]);
         }
-
-
     }
 
     public function getCompanies(User $user)

@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\GeoGroup;
 use App\Models\AwsCloudfrontDistribution;
 use App\Models\Country;
+use App\Models\Billing;
 
 /*
 |--------------------------------------------------------------------------
@@ -320,6 +321,7 @@ Artisan::command('db:setup', function () {
         }
         $this->info("--Country Table Done");
 
+        //DynamoDB
         $dynamodbClient = \AWS::createClient('DynamoDB');
         try {
             $tableName = 'users_api_histories';
@@ -331,6 +333,14 @@ Artisan::command('db:setup', function () {
                 'Error' => 'Error: ' . $e->getAwsErrorMessage()
             ];
         }
+        $this->info("--DynamoDB Done");
+
+        //Add Billings
+        Billing::create(['type'=>'Storage', 'amount' => 1]);
+        Billing::create(['name'=>'Bandwidth', 'amount' =>0.15]);
+        Billing::create(['name'=>'Otp', 'amount' =>0.06]);
+        Billing::create(['name'=>'Cron', 'amount' =>0.0000002]);
+        $this->info("--Billing Table Done");
 
         //Mark setup is done
         if($setupDone == null){

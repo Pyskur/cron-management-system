@@ -56,8 +56,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
         Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
         
-        Route::get('users/{user}/companies', [UserController::class, 'getCompanies']);
-        Route::get('users/{user}/groups', [UserController::class, 'getGroups']);
+        Route::get('users/{user}/companies', [UserController::class, 'getCompanies'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_COMPANIES]);
+        Route::get('users/{user}/groups', [UserController::class, 'getGroups'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_GROUPS]);
 
         Route::get('companies/{company}/users', [CompanyController::class, 'getUsers']);
         Route::post('companies/add-user', [CompanyController::class, 'addUsertoCompany']);

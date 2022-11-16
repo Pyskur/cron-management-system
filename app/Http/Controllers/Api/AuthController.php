@@ -186,9 +186,12 @@ class AuthController extends Controller
             ]);
         }
 
-        // Auth::logout();
+        Auth::logout();
 
-        return response()->json([]);
+        return response()->json([
+            'code' => true,
+            'message' => 'Successfully logged out.'
+        ]);
     }
 
     public function email_verification(Request $request)

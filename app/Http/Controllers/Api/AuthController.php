@@ -106,7 +106,7 @@ class AuthController extends Controller
                     return response()->json([
                         'code' => false,
                         'message' => 'IP check failed',
-                    ], 400);     
+                    ], 400);
                 }
             } else {
                 $blacklistips = new BlacklistIpsController;

@@ -58,9 +58,23 @@ class BlacklistIpsController extends Controller
     public function isBlocked($data)
     {
         $ip = $data['login_ip'];
-        $blacklistip = BlacklistIps::firstWhere('ip_address', $ip);
-        if ($blacklistip && $blacklistip->enabled) {
-            return true;
+        $ranges = BlacklistIps::all();
+
+        foreach ($ranges as $range) {
+            if ($range->enabled) {
+                list($subnet, $bits) = explode('/', $range->ip_address);
+                if ($bits === null) {
+                    $bits = 32;
+                }
+                $ip = ip2long($ip);
+                $subnet = ip2long($subnet);
+                $mask = -1 << (32 - intval($bits));
+                $subnet &= $mask;
+
+                if (($ip & $mask) == $subnet) {
+                    return true;
+                }
+            }
         }
 
         return false;

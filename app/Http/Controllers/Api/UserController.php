@@ -273,16 +273,12 @@ class UserController extends Controller
         $newdata['balance'] = $user->balance - $balance;
 
         if ($newdata['balance'] < 0) {
-            return response()->json([
-                "error" => "Balance error",
-                "code" => 0,
-                "message" => "Low Balance"
-            ]);
+            return false;
         }
 
         $user->update($newdata);
 
-        return response()->json($user);
+        return true;
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Limit;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class LimitController extends Controller
 {
@@ -17,8 +18,15 @@ class LimitController extends Controller
      */
     public function index()
     {
-        $limits = Limit::all();
-        return response()->json($limits);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_INDEX)) {
+            $limits = Limit::all();
+            return response()->json($limits);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -29,39 +37,46 @@ class LimitController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'uri' => 'required|string|max:255',
-            'count' => 'required|numeric',
-            'hour_started' => 'required|numeric',
-            'api_key' => 'required|string|max:40',
+            $validator = Validator::make($input, [
+                'uri' => 'required|string|max:255',
+                'count' => 'required|numeric',
+                'hour_started' => 'required|numeric',
+                'api_key' => 'required|string|max:40',
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $limit = Limit::create($input);
+                return response()->json($limit);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Limit store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $limit = Limit::create($input);
-            return response()->json($limit);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Limit store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -72,7 +87,14 @@ class LimitController extends Controller
      */
     public function show(Limit $limit)
     {
-        return response()->json($limit);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_SHOW)) {
+            return response()->json($limit);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -84,39 +106,46 @@ class LimitController extends Controller
      */
     public function update(Request $request, Limit $limit)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'uri' => 'string|max:255',
-            'count' => 'numeric',
-            'hour_started' => 'numeric',
-            'api_key' => 'string|max:40',
+            $validator = Validator::make($input, [
+                'uri' => 'string|max:255',
+                'count' => 'numeric',
+                'hour_started' => 'numeric',
+                'api_key' => 'string|max:40',
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $limit->update($input);
+                return response()->json($limit);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Limit update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $limit->update($input);
-            return response()->json($limit);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Limit update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -127,7 +156,14 @@ class LimitController extends Controller
      */
     public function destroy(Limit $limit)
     {
-        $limit->delete();
-        return response()->json();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_DELETE)) {
+            $limit->delete();
+            return response()->json();
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

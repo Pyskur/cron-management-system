@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Models\User;
+use App\Permissions\Permission;
 
 class ForgotPasswordController extends Controller
 {
@@ -17,18 +18,25 @@ class ForgotPasswordController extends Controller
      */
     public function __invoke(ForgotPasswordRequest $request)
     {
-        ResetCodePassword::where('email', $request->email)->delete();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_FORGOTPASSWORD_INVOKE)) {
+            ResetCodePassword::where('email', $request->email)->delete();
 
-        $codeData = ResetCodePassword::create($request->data());
+            $codeData = ResetCodePassword::create($request->data());
 
-        Mail::to($request->email)->queue(new SendCodeResetPassword($codeData->code));
-        // Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
+            Mail::to($request->email)->queue(new SendCodeResetPassword($codeData->code));
+            // Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
 
-        $user = new UserController;
-        $user->updateBalance($request->email, 'Otp');
+            $user = new UserController;
+            $user->updateBalance($request->email, 'Otp');
 
-        $user = User::firstWhere('email', $request->email);
+            $user = User::firstWhere('email', $request->email);
 
-        return response()->json($user);
+            return response()->json($user);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

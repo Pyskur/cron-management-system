@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KeysSms;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class KeysSmsController extends Controller
 {
@@ -17,8 +18,15 @@ class KeysSmsController extends Controller
      */
     public function index()
     {
-        $keysSms = KeysSms::all();
-        return response()->json($keysSms);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_INDEX)) {
+            $keysSms = KeysSms::all();
+            return response()->json($keysSms);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -29,39 +37,46 @@ class KeysSmsController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'from' => 'required|string|max:10',
-            'text' => 'required|string',
-            'status' => 'required|string|max:50',
-            'friendly_name' => 'required|string'
+            $validator = Validator::make($input, [
+                'from' => 'required|string|max:10',
+                'text' => 'required|string',
+                'status' => 'required|string|max:50',
+                'friendly_name' => 'required|string'
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $keysSms = KeysSms::create($input);
+                return response()->json($keysSms);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "keysSms store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $keysSms = KeysSms::create($input);
-            return response()->json($keysSms);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "keysSms store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -72,7 +87,14 @@ class KeysSmsController extends Controller
      */
     public function show(KeysSms $keysSms)
     {
-        return response()->json($keysSms);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_SHOW)) {
+            return response()->json($keysSms);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -84,39 +106,46 @@ class KeysSmsController extends Controller
      */
     public function update(Request $request, KeysSms $keysSms)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'from' => 'nullable|string|max:10',
-            'text' => 'nullable|string',
-            'status' => 'nullable|string|max:50',
-            'friendly_name' => 'nullable|string'
+            $validator = Validator::make($input, [
+                'from' => 'nullable|string|max:10',
+                'text' => 'nullable|string',
+                'status' => 'nullable|string|max:50',
+                'friendly_name' => 'nullable|string'
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $keysSms->update($input);
+                return response()->json($keysSms);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "KeysSms update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $keysSms->update($input);
-            return response()->json($keysSms);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "KeysSms update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -127,7 +156,14 @@ class KeysSmsController extends Controller
      */
     public function destroy(KeysSms $keysSms)
     {
-        $keysSms->delete();
-        return response()->json();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_DELETE)) {
+            $keysSms->delete();
+            return response()->json();
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

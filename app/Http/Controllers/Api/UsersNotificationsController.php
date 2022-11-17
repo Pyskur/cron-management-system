@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UsersNotifications;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class UsersNotificationsController extends Controller
 {
@@ -18,22 +19,29 @@ class UsersNotificationsController extends Controller
      */
     public function getNotifications(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_USERNOTIFICATIONS_GETNOTIFICATIONS)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'user_id' => 'required|uuid',
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'user_id' => 'required|uuid',
             ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            $Notifications = UsersNotifications::where('user_id', $input['user_id'])->pluck('notification_id');
+            return response()->json($Notifications);
         }
 
-        $Notifications = UsersNotifications::where('user_id', $input['user_id'])->pluck('notification_id');
-        return response()->json($Notifications);
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -44,22 +52,29 @@ class UsersNotificationsController extends Controller
      */
     public function getUsers(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_USERNOTIFICATIONS_GETUSERS)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'notification_id' => 'required|uuid',
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'notification_id' => 'required|uuid',
             ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            $users = UsersNotifications::where('notification_id', $input['notification_id'])->pluck('user_id');
+            return response()->json($users);
         }
 
-        $users = UsersNotifications::where('notification_id', $input['notification_id'])->pluck('user_id');
-        return response()->json($users);
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -70,37 +85,44 @@ class UsersNotificationsController extends Controller
      */
     public function addUsertoNotification(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_USERNOTIFICATIONS_ADDUSERTONOTIFICATION)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'notification_id' => 'required|uuid',
-            'user_id' => 'required|uuid',
+            $validator = Validator::make($input, [
+                'notification_id' => 'required|uuid',
+                'user_id' => 'required|uuid',
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $user_notification = UsersNotifications::create($input);
+                return response()->json($user_notification);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "UsersNotifications store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $user_notification = UsersNotifications::create($input);
-            return response()->json($user_notification);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "UsersNotifications store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -111,23 +133,30 @@ class UsersNotificationsController extends Controller
      */
     public function deleteUserfromNotification(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_USERNOTIFICATIONS_DELETEUSERFROMNOTIFICATION)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'notification_id' => 'required|uuid',
-            'user_id' => 'required|uuid',
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'notification_id' => 'required|uuid',
+                'user_id' => 'required|uuid',
             ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            UsersNotifications::where('notification_id', $input['notification_id'])->where('user_id', $input['user_id'])->delete();
+
+            return response()->json();
         }
 
-        UsersNotifications::where('notification_id', $input['notification_id'])->where('user_id', $input['user_id'])->delete();
-
-        return response()->json();
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

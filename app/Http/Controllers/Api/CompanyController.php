@@ -9,7 +9,7 @@ use App\Models\UsersGroups;
 use App\Models\UsersCompanies;
 use Illuminate\Http\Request;
 use Validator;
-
+use App\Permissions\Permission;
 class CompanyController extends Controller
 {
     /**
@@ -19,8 +19,17 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $companies = Company::all();
-        return response()->json($companies);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_COMPANY_INDEX)) {
+            $companies = Company::all();
+            return response()->json($companies);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -31,45 +40,54 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_COMPANY_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'name' => 'required|string|max:50',
-            'sso_token' => 'required|string|max:255',
-            'billing_detail' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'domain' => 'required|string|max:255',
-            'whitelist_ip' => 'required|string|max:255',
-            'logo' => 'required|string|max:255',
-            'color1' => 'required|string|max:10',
-            'color2' => 'required|string|max:10',
-            'color3' => 'required|string|max:10',
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'name' => 'required|string|max:50',
+                'sso_token' => 'required|string|max:255',
+                'billing_detail' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'domain' => 'required|string|max:255',
+                'whitelist_ip' => 'required|string|max:255',
+                'logo' => 'required|string|max:255',
+                'color1' => 'required|string|max:10',
+                'color2' => 'required|string|max:10',
+                'color3' => 'required|string|max:10',
             ]);
-        }
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
 
-        try {
-            $company = Company::create($input);
-            return response()->json($company);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
+            try {
+                $company = Company::create($input);
+                return response()->json($company);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Company store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
             }
-            else{
-                $message = "Company store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
         }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        } 
     }
 
     /**
@@ -80,7 +98,16 @@ class CompanyController extends Controller
      */
     public function show(Company $company)
     {
-        return response()->json($company);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_COMPANY_SHOW)) {
+            return response()->json($company);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -92,43 +119,52 @@ class CompanyController extends Controller
      */
     public function update(Request $request, Company $company)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_COMPANY_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'name' => 'string|max:50',
-            'sso_token' => 'string|max:255',
-            'billing_detail' => 'string|max:255',
-            'address' => 'string|max:255',
-            'domain' => 'string|max:255',
-            'whitelist_ip' => 'string|max:255',
-            'logo' => 'string|max:255',
-            'color1' => 'string|max:10',
-            'color2' => 'string|max:10',
-            'color3' => 'string|max:10',
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'name' => 'string|max:50',
+                'sso_token' => 'string|max:255',
+                'billing_detail' => 'string|max:255',
+                'address' => 'string|max:255',
+                'domain' => 'string|max:255',
+                'whitelist_ip' => 'string|max:255',
+                'logo' => 'string|max:255',
+                'color1' => 'string|max:10',
+                'color2' => 'string|max:10',
+                'color3' => 'string|max:10',
             ]);
+    
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+    
+            try {
+                $company->update($input);
+                return response()->json($company);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Company update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
         }
-
-        try {
-            $company->update($input);
-            return response()->json($company);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Company update error";
-            }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -141,8 +177,17 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company)
     {
-        $company->delete();
-        return response()->json();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_COMPANY_DESTROY)) {
+            $company->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     public function getUsers(Company $company){

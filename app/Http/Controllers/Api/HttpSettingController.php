@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HttpSetting;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class HttpSettingController extends Controller
 {
@@ -17,8 +18,17 @@ class HttpSettingController extends Controller
      */
     public function index()
     {
-        $httpSetting = HttpSetting::all();
-        return response()->json($httpSetting);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_HTTPSETTING_INDEX)) {
+            $httpSetting = HttpSetting::all();
+            return response()->json($httpSetting);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -29,39 +39,48 @@ class HttpSettingController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_HTTPSETTING_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'authentication' => 'required|numeric',
-            'authentication_username' => 'required|string|max:50',
-            'authentication_password' => 'required|string|max:50',
-            'method' => 'required|string|max:50',
-            'message_body' => 'required|string|max:50',
-            'headers' => 'required|string|max:50',
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'authentication' => 'required|numeric',
+                'authentication_username' => 'required|string|max:50',
+                'authentication_password' => 'required|string|max:50',
+                'method' => 'required|string|max:50',
+                'message_body' => 'required|string|max:50',
+                'headers' => 'required|string|max:50',
             ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+    
+            try {
+                $httpSetting = HttpSetting::create($input);
+                return response()->json($httpSetting);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "HttpSetting store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
         }
-
-        try {
-            $httpSetting = HttpSetting::create($input);
-            return response()->json($httpSetting);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "HttpSetting store error";
-            }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -74,7 +93,17 @@ class HttpSettingController extends Controller
      */
     public function show(HttpSetting $httpSetting)
     {
-        return response()->json($httpSetting);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_HTTPSETTING_SHOW)) {
+            return response()->json($httpSetting);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+
     }
 
     /**
@@ -86,39 +115,48 @@ class HttpSettingController extends Controller
      */
     public function update(Request $request, HttpSetting $httpSetting)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_HTTPSETTING_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'authentication' => 'numeric',
-            'authentication_username' => 'string|max:50',
-            'authentication_password' => 'string|max:50',
-            'method' => 'string|max:50',
-            'message_body' => 'string|max:50',
-            'headers' => 'string|max:50',
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'authentication' => 'numeric',
+                'authentication_username' => 'string|max:50',
+                'authentication_password' => 'string|max:50',
+                'method' => 'string|max:50',
+                'message_body' => 'string|max:50',
+                'headers' => 'string|max:50',
             ]);
+    
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+    
+            try {
+                $httpSetting->update($input);
+                return response()->json($httpSetting);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "HttpSetting update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
         }
-
-        try {
-            $httpSetting->update($input);
-            return response()->json($httpSetting);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "HttpSetting update error";
-            }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -131,7 +169,17 @@ class HttpSettingController extends Controller
      */
     public function destroy(HttpSetting $httpSetting)
     {
-        $httpSetting->delete();
-        return response()->json();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_HTTPSETTING_DESTROY)) {
+            $httpSetting->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
+
     }
 }

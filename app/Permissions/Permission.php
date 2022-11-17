@@ -35,4 +35,54 @@ class Permission
     public const CAN_BILLING_UPDATE = "billing-update";
     public const CAN_BILLING_SHOW = "billing-show";
     public const CAN_BILLING_DESTROY = "billing-destroy";
+
+    public const CAN_COMPANY_INDEX = "company-index";
+    public const CAN_COMPANY_STORE = "company-store";
+    public const CAN_COMPANY_UPDATE = "company-update";
+    public const CAN_COMPANY_SHOW = "company-show";
+    public const CAN_COMPANY_DESTROY = "company-destroy";
+    public const CAN_COMPANY_GET_USERS = "company-get-users";
+    public const CAN_COMPANY_ADD_USER = "company-add-user";
+    public const CAN_COMPANY_DELETE_USER = "company-delete-user";
+    public const CAN_COMPANY_ADD_GROUP = "company-add-group";
+
+    public const CAN_COUNTRY_INDEX = "country-index";
+    public const CAN_COUNTRY_STORE = "country-store";
+    public const CAN_COUNTRY_UPDATE = "country-update";
+    public const CAN_COUNTRY_SHOW = "country-show";
+    public const CAN_COUNTRY_DESTROY = "country-destroy";
+
+    public const CAN_CRON_INDEX = "cron-index";
+    public const CAN_CRON_STORE = "cron-store";
+    public const CAN_CRON_UPDATE = "cron-update";
+    public const CAN_CRON_SHOW = "cron-show";
+    public const CAN_CRON_DESTROY = "cron-destroy";
+
+    public const CAN_EPD_INDEX = "epd-index";
+    public const CAN_EPD_STORE = "epd-store";
+    public const CAN_EPD_UPDATE = "epd-update";
+    public const CAN_EPD_SHOW = "epd-show";
+    public const CAN_EPD_DESTROY = "epd-destroy";
+    
+    public const CAN_GROUP_INDEX = "group-index";
+    public const CAN_GROUP_STORE = "group-store";
+    public const CAN_GROUP_UPDATE = "group-update";
+    public const CAN_GROUP_SHOW = "group-show";
+    public const CAN_GROUP_DESTROY = "group-destroy";
+    public const CAN_GROUP_GET_USERS = "group-get-users";
+    public const CAN_GROUP_ADD_USER = "group-add-user";
+    public const CAN_GROUP_DELETE_USER = "group-delete-user";
+
+    public const CAN_HTTPSETTING_INDEX = "httpsetting-index";
+    public const CAN_HTTPSETTING_STORE = "httpsetting-store";
+    public const CAN_HTTPSETTING_UPDATE = "httpsetting-update";
+    public const CAN_HTTPSETTING_SHOW = "httpsetting-show";
+    public const CAN_HTTPSETTING_DESTROY = "httpsetting-destroy";
+
+    public const CAN_KEY_INDEX = "key-index";
+    public const CAN_KEY_STORE = "key-store";
+    public const CAN_KEY_UPDATE = "key-update";
+    public const CAN_KEY_SHOW = "key-show";
+    public const CAN_KEY_DESTROY = "key-destroy";
+
 }

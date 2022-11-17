@@ -32,6 +32,9 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VideoPlayerController;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
+
+use Aws\Athena\AthenaClient;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -117,15 +120,54 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware('throttle:security')->group(function () {
         //Place route here
     });
-
-    Route::get('/test', function (Request $request) {
-        return response()->json(['admin'=>Auth::user()->isAdmin()]);
-    
-    });
-    
 });
 Route::post('videos/test-noauth', [VideoController::class, 'test']);
 
+Route::get('/test', function (Request $request) {
+    $options = [
+        'version' => 'latest',
+        'region'  => env('AWS_DEFAULT_REGION', 'eu-north-1'),
+        'credentials' => [
+           'key'    => env('AWS_ACCESS_KEY_ID', ""),
+           'secret' => env('AWS_SECRET_ACCESS_KEY', "")
+        ]
+    ];
+    $athenaClient = new Aws\Athena\AthenaClient($options);
+    
+    $databaseName = 's3_access_logs_db';
+    $catalog = 'AwsDataCatalog';
+    $sql = 'SELECT * FROM mybucket_logs limit 10';
+    $outputS3Location = 's3://veri-vod-cloudfrontcloudfrontloggingbuckete23c521-bxz8dj0ke1vf/';
+    
+     $startQueryResponse = $athenaClient->startQueryExecution([
+        'QueryExecutionContext' => [
+            'Catalog' => $catalog,
+            'Database' => $databaseName
+        ],
+        'QueryString' => $sql,
+        'ResultConfiguration'   => [
+            'OutputLocation' => $outputS3Location
+        ]
+     ]);
+    
+    $queryExecutionId = $startQueryResponse->get('QueryExecutionId');
+     // var_dump($queryExecutionId);
+    
+     $waitForSucceeded = function () use ($athenaClient, $queryExecutionId, &$waitForSucceeded) {
+        $getQueryExecutionResponse = $athenaClient->getQueryExecution([
+            'QueryExecutionId' => $queryExecutionId
+        ]);
+        $status = $getQueryExecutionResponse->get('QueryExecution')['Status']['State'];
+        // print("[waitForSucceeded] State=$status\n");
+        return $status === 'SUCCEEDED' || $waitForSucceeded();
+     };
+     $waitForSucceeded();
+    
+     $getQueryResultsResponse = $athenaClient->getQueryResults([
+        'QueryExecutionId' => $queryExecutionId
+     ]);
+    return response()->json($getQueryResultsResponse->get('ResultSet'));    
+});
     
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);

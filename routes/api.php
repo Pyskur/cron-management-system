@@ -52,7 +52,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/auth/user', function (Request $request) {
             return $request->user();
         
-        });
+        })->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_AUTH_USER]);
         Route::delete('auth/logout', [AuthController::class,'logout']);
         
         Route::get('report/daily_report', [ReportController::class, 'daily_report']);
@@ -77,7 +77,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
         
         Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
-        Route::get('payments/i  pn', [PaymentController::class, 'ipn']);
+        Route::get('payments/ipn', [PaymentController::class, 'ipn']);
         Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod']);
         Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);
         Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);

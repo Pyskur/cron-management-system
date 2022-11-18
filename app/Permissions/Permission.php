@@ -15,6 +15,12 @@ class Permission
     public const CAN_VIDEO_THUMBNAILS = "video-thumbnails";
     public const CAN_VIDEO_BYPATH = "video-by-path";
 
+    public const CAN_VIDEOPLAYER_INDEX = "videoplayer-index";
+    public const CAN_VIDEOPLAYER_STORE = "videoplayer-store";
+    public const CAN_VIDEOPLAYER_UPDATE = "videoplayer-update";
+    public const CAN_VIDEOPLAYER_SHOW = "videoplayer-show";
+    public const CAN_VIDEOPLAYER_DESTROY = "videoplayer-destroy";
+
     public const CAN_USER_INDEX = "user-index";
     public const CAN_USER_STORE = "user-store";
     public const CAN_USER_UPDATE = "user-update";
@@ -134,19 +140,22 @@ class Permission
         
     public const CAN_FORGOTPASSWORD_INVOKE = "forgotpassword-invoke";
     
-    public const CAN_PAYMENT_AUTO_RENEW_USER_PAYMENT = "payment-auto_renew_user_payment";
-    public const CAN_PAYMENT_AUTO_RECHARGE_PAYMENT = "payment-auto_recharge_payment";
+    public const CAN_PAYMENT_AUTO_RENEW_USER_PAYMENT = "payment-auto-renew-user-payment";
+    public const CAN_PAYMENT_AUTO_RECHARGE_PAYMENT = "payment-auto-recharge-payment";
     public const CAN_PAYMENT_IPN = "payment-ipn";
     public const CAN_PAYMENT_ADDPAYMENTMETHOD = "payment-addpaymentmethod";
     public const CAN_PAYMENT_GETMYSTRIPEPROFILE = "payment-getmystripeprofile";
     public const CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS = "payment-getmystripepaymentmethods";
 
-    public const CAN_REPORT_DAILY_REPORT = "report-daily_report";
-    public const CAN_REPORT_Monthly_REPORT = "report-monthly_report";
-    public const CAN_REPORT_Weekly_REPORT = "report-weekly_report";
+    public const CAN_REPORT_DAILY_REPORT = "report-daily-report";
+    public const CAN_REPORT_Monthly_REPORT = "report-monthly-report";
+    public const CAN_REPORT_Weekly_REPORT = "report-weekly-report";
 
     public const CAN_RESETPASSWORD_INVOKE = "resetpassword-invoke";
     public const CAN_USERNOTIFICATIONS_GETNOTIFICATIONS = "usersnotifications-getnotifications";
     public const CAN_USERNOTIFICATIONS_GETUSERS = "usersnotifications-getusers";
     public const CAN_USERNOTIFICATIONS_ADDUSERTONOTIFICATION = "usersnotifications-addusertonotification";
-    public const CAN_USERNOTIFICATIONS_DELETEUSERFROMNOTIFICATION = "usersnotifications-deleteuserfromnotification";}
+    public const CAN_USERNOTIFICATIONS_DELETEUSERFROMNOTIFICATION = "usersnotifications-deleteuserfromnotification";
+
+    public const CAN_AUTH_USER = "auth-user";
+}

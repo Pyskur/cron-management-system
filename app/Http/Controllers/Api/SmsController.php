@@ -11,6 +11,7 @@ use Validator;
 use App\Http\Controllers\Jobs\LeadSendmailJob;
 use App\Http\Controllers\Jobs\VerificationSendMailJob;
 use Illuminate\Support\Facades\Mail;
+use App\Permissions\Permission;
 
 class SmsController extends Controller
 {
@@ -21,8 +22,15 @@ class SmsController extends Controller
      */
     public function index()
     {
-        $smses = Sms::all();
-        return response()->json($smses);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_INDEX)) {
+            $smses = Sms::all();
+            return response()->json($smses);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -33,47 +41,54 @@ class SmsController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'number_to_send' => 'required|string|max:24',
-            'date_expires' => 'required|numeric',
-            'status' => 'required|numeric',
-            'cost' => 'required|string|max:4',
-            'charge' => 'required|string|max:4',
-            'date_added' => 'required|date',
-            'log' => 'required|numeric',
-            'key_id' => 'required|uuid',
-            'code_variable' => 'required|string|max:445',
-            'user_id' => 'required|nullable|uuid'
+            $validator = Validator::make($input, [
+                'number_to_send' => 'required|string|max:24',
+                'date_expires' => 'required|numeric',
+                'status' => 'required|numeric',
+                'cost' => 'required|string|max:4',
+                'charge' => 'required|string|max:4',
+                'date_added' => 'required|date',
+                'log' => 'required|numeric',
+                'key_id' => 'required|uuid',
+                'code_variable' => 'required|string|max:445',
+                'user_id' => 'required|nullable|uuid'
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            $input['uniqueid'] = 'sdfasdfasdf'; // must be random string
+
+            try {
+                $sms = Sms::create($input);
+                return response()->json($sms);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Sms store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        $input['uniqueid'] = 'sdfasdfasdf'; // must be random string
-
-        try {
-            $sms = Sms::create($input);
-            return response()->json($sms);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Sms store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -84,7 +99,14 @@ class SmsController extends Controller
      */
     public function show(Sms $sms)
     {
-        return response()->json($sms);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_SHOW)) {
+            return response()->json($sms);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -96,45 +118,52 @@ class SmsController extends Controller
      */
     public function update(Request $request, Sms $sms)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'number_to_send' => 'string|max:24',
-            'date_expires' => 'numeric',
-            'status' => 'numeric',
-            'cost' => 'string|max:4',
-            'charge' => 'string|max:4',
-            'date_added' => 'date',
-            'log' => 'numeric',
-            'key_id' => 'uuid',
-            'code_variable' => 'string|max:445',
-            'user_id' => 'nullable|uuid'
+            $validator = Validator::make($input, [
+                'number_to_send' => 'string|max:24',
+                'date_expires' => 'numeric',
+                'status' => 'numeric',
+                'cost' => 'string|max:4',
+                'charge' => 'string|max:4',
+                'date_added' => 'date',
+                'log' => 'numeric',
+                'key_id' => 'uuid',
+                'code_variable' => 'string|max:445',
+                'user_id' => 'nullable|uuid'
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $sms->update($input);
+                return response()->json($sms);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Sms update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $sms->update($input);
-            return response()->json($sms);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Sms update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -145,8 +174,15 @@ class SmsController extends Controller
      */
     public function destroy(Sms $sms)
     {
-        $sms->delete();
-        return response()->json();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_DESTROY)) {
+            $sms->delete();
+            return response()->json();
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     public function generateUniqueCode()
@@ -168,13 +204,20 @@ class SmsController extends Controller
 
     public function sendUserVerificationMessage(Request $request)
     {
-        $data = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_SENDUSERVERIFICATIONMESSAGE)) {
+            $data = $request->all();
 
-        $e = $this->sendUserVerificationMessage_core($data);
-        if($e === 0) {
-            return response()->json(['status'=>'true']);
+            $e = $this->sendUserVerificationMessage_core($data);
+            if($e === 0) {
+                return response()->json(['status'=>'true']);
+            }
+            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
         }
-        return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     public function sendUserVerificationMessage_core($data)
@@ -198,15 +241,22 @@ class SmsController extends Controller
 
     public function sendMessage(Request $request)
     {
-        try
-        {
-            $data=$request->all();
-            $this->dispatch(new LeadSendmailJob($data));
-            return response()->json(['status'=>'true']);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_SENDMESSAGE)) {
+            try
+            {
+                $data=$request->all();
+                $this->dispatch(new LeadSendmailJob($data));
+                return response()->json(['status'=>'true']);
+            }
+            catch (\Exception $e)
+            {
+                return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+            }
         }
-        catch (\Exception $e)
-        {
-            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
-        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

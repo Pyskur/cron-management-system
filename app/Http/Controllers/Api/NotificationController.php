@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class NotificationController extends Controller
 {
@@ -17,8 +18,15 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Notification::all();
-        return response()->json($notifications);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_INDEX)) {
+            $notifications = Notification::all();
+            return response()->json($notifications);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -29,41 +37,45 @@ class NotificationController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'name' => 'required|string',
-            'status' => 'required|string',
-            'user_id' => 'required|uuid',
+            $validator = Validator::make($input, [
+                'name' => 'required|string',
+                'status' => 'required|string',
+                'user_id' => 'required|uuid',
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $notification = Notification::create($input);
+                return response()->json($notification);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Notification store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $notification = Notification::create($input);
-            return response()->json($notification);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Notification store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
-       
-
-        
     }
 
     /**
@@ -74,7 +86,14 @@ class NotificationController extends Controller
      */
     public function show(Notification $notification)
     {
-        return response()->json($notification);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_SHOW)) {
+            return response()->json($notification);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -86,38 +105,45 @@ class NotificationController extends Controller
      */
     public function update(Request $request, Notification $notification)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'name' => 'nullable|string',
-            'status' => 'nullable|string',
-            'user_id' => 'nullable|uuid',
+            $validator = Validator::make($input, [
+                'name' => 'nullable|string',
+                'status' => 'nullable|string',
+                'user_id' => 'nullable|uuid',
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $notification->update($input);
+                return response()->json($notification);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Notification update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $notification->update($input);
-            return response()->json($notification);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Notification update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -128,7 +154,14 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
-        $notification->delete();
-        return response()->json();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_DESTROY)) {
+            $notification->delete();
+            return response()->json();
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

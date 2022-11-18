@@ -10,10 +10,12 @@ use App\Models\PaymentMethod;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use App\Permissions\Permission;
 
 class PaymentController extends Controller
 {
     public function auto_renew_user_payment($user_id) {
+      if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_PAYMENT_AUTO_RENEW_USER_PAYMENT)) {
         $user_data = User::where('id', $user_id)->first();
         // return $user_data->auto_renew->auto_renew_min_amt;
         // if (is_array($user_data) && count($user_data) > 0) {
@@ -101,9 +103,16 @@ class PaymentController extends Controller
             exit;
           }
         // }
+      }
+
+      return response()->json([
+          'error'=> 'Error',
+          'message' => 'Not Authorized.'
+      ]);
     }
 
     public function autoRechargePayment(Request $request){
+      if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_PAYMENT_AUTO_RECHARGE_PAYMENT)) {
         $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
         \Stripe\Stripe::setMaxNetworkRetries(2);
         \Stripe\Stripe::setApiKey($stripeSecret);
@@ -180,123 +189,157 @@ class PaymentController extends Controller
             // $msgType = 'error';
             // $msg = "Something went wrong. Please refresh page or try again after some time.";
         }
+      }
+
+      return response()->json([
+          'error'=> 'Error',
+          'message' => 'Not Authorized.'
+      ]);
     }
 
     public function ipn(Request $request)
     {
-      //paypal return transaction details array
-      $paypalInfo = $request->all();
-      $data['user_id'] = $paypalInfo['custom'];
-      $data['txn_id'] = $paypalInfo["txn_id"];
-      $data['payment_gross'] = $paypalInfo["mc_gross"];
-      $data['currency_code'] = $paypalInfo["mc_currency"];
-      $data['payer_email'] = $paypalInfo["payer_email"];
-      $data['payment_status'] = $paypalInfo["payment_status"];
-      
-      // $paypalURL = $this->paypal_lib->paypal_url;
-      // $result = $this->paypal_lib->curlPost($paypalURL, $paypalInfo);
-      //check whether the payment is verified
-
-      $sanbox = env('PAYPAL_MODE');
-      $paypal_url = ($sanbox == 'sandbox')?'https://www.sandbox.paypal.com/cgi-bin/webscr':'https://www.paypal.com/cgi-bin/webscr';
-
-      $req = 'cmd=_notify-validate';
-      foreach($paypalInfo as $key => $value) 
-      {
-        $value = urlencode(stripslashes($value));
-        $req .= "&$key=$value";
-      }
+      if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_PAYMENT_IPN)) {
+        //paypal return transaction details array
+        $paypalInfo = $request->all();
+        $data['user_id'] = $paypalInfo['custom'];
+        $data['txn_id'] = $paypalInfo["txn_id"];
+        $data['payment_gross'] = $paypalInfo["mc_gross"];
+        $data['currency_code'] = $paypalInfo["mc_currency"];
+        $data['payer_email'] = $paypalInfo["payer_email"];
+        $data['payment_status'] = $paypalInfo["payment_status"];
         
-      $ipnsiteurl=$paypal_url;
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $ipnsiteurl);
-      curl_setopt($ch, CURLOPT_HEADER, false);
-      curl_setopt($ch, CURLOPT_POST, 1);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
-      $result = curl_exec($ch);
-      curl_close($ch);
+        // $paypalURL = $this->paypal_lib->paypal_url;
+        // $result = $this->paypal_lib->curlPost($paypalURL, $paypalInfo);
+        //check whether the payment is verified
 
-      if (preg_match("/VERIFIED/i", $result)) {
-        //insert the transaction data into the database
-        // $this->insert_model->storePaypalTransaction($data);
+        $sanbox = env('PAYPAL_MODE');
+        $paypal_url = ($sanbox == 'sandbox')?'https://www.sandbox.paypal.com/cgi-bin/webscr':'https://www.paypal.com/cgi-bin/webscr';
+
+        $req = 'cmd=_notify-validate';
+        foreach($paypalInfo as $key => $value) 
+        {
+          $value = urlencode(stripslashes($value));
+          $req .= "&$key=$value";
+        }
+          
+        $ipnsiteurl=$paypal_url;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $ipnsiteurl);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
+        $result = curl_exec($ch);
+        curl_close($ch);
+
+        if (preg_match("/VERIFIED/i", $result)) {
+          //insert the transaction data into the database
+          // $this->insert_model->storePaypalTransaction($data);
+        }
       }
+
+      return response()->json([
+          'error'=> 'Error',
+          'message' => 'Not Authorized.'
+      ]);
     }
 
     public function addPaymentMethod(Request $request)
     {
-      $input = $request->all();
+      if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_PAYMENT_ADDPAYMENTMETHOD)) {
+        $input = $request->all();
 
-      $validator = Validator::make($input, [
-          'type' => 'required|string',
-          'number' => 'required|string',
-          'exp_month' => 'required|string',
-          'exp_year' => 'required|string',
-          'cvc' => 'required|numeric',
-      ]);
-      if($validator->fails()){
-          return response()->json([
-              "error" => "Validation Error",
-              "code"=> 0,
-              "message"=> $validator->errors()
-          ]);
+        $validator = Validator::make($input, [
+            'type' => 'required|string',
+            'number' => 'required|string',
+            'exp_month' => 'required|string',
+            'exp_year' => 'required|string',
+            'cvc' => 'required|numeric',
+        ]);
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+        $user = Auth::user();
+
+        $userinfo = User::where('id', $user->id)->first();
+
+        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+        $paymentInfo = $stripe->paymentMethods->create([
+          'type' => $request->type,
+          'card' => [
+            'number' => $request->number,
+            'exp_month' => $request->exp_month,
+            'exp_year' => $request->exp_year,
+            'cvc' => $request->cvc,
+          ],
+        ]);
+
+        $res = $stripe->paymentMethods->attach(
+          $paymentInfo->id,
+          ['customer' => $userinfo->stripe_cust_id]
+        );
+
+        $new_method = new PaymentMethod();
+        $new_method->stripe_method_id = $paymentInfo->id;
+        $new_method->user_id = $user->id;
+        $new_method->save();
+
+        return response()->json($res);
       }
-      $user = Auth::user();
 
-      $userinfo = User::where('id', $user->id)->first();
-
-      $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
-      $paymentInfo = $stripe->paymentMethods->create([
-        'type' => $request->type,
-        'card' => [
-          'number' => $request->number,
-          'exp_month' => $request->exp_month,
-          'exp_year' => $request->exp_year,
-          'cvc' => $request->cvc,
-        ],
+      return response()->json([
+          'error'=> 'Error',
+          'message' => 'Not Authorized.'
       ]);
-
-      $res = $stripe->paymentMethods->attach(
-        $paymentInfo->id,
-        ['customer' => $userinfo->stripe_cust_id]
-      );
-
-      $new_method = new PaymentMethod();
-      $new_method->stripe_method_id = $paymentInfo->id;
-      $new_method->user_id = $user->id;
-      $new_method->save();
-
-      return response()->json($res);
     }
 
     public function getMyStripeProfile(Request $request)
     {
-      $user = Auth::user();
-      $userinfo = User::where('id', $user->id)->first();
+      if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE)) {
+        $user = Auth::user();
+        $userinfo = User::where('id', $user->id)->first();
 
-      $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
-      $res = $stripe->customers->retrieve(
-        $userinfo->stripe_cust_id,
-        []
-      );
-      return response()->json($res);
+        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+        $res = $stripe->customers->retrieve(
+          $userinfo->stripe_cust_id,
+          []
+        );
+        return response()->json($res);
+      }
+
+      return response()->json([
+          'error'=> 'Error',
+          'message' => 'Not Authorized.'
+      ]);
     }
 
     public function getMyStripePaymentMethods(Request $request)
     {
-      $user = Auth::user();
-      $methods = PaymentMethod::where('user_id', $user->id)->get();
+      if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS)) {
+        $user = Auth::user();
+        $methods = PaymentMethod::where('user_id', $user->id)->get();
 
-      $result = [];
-      foreach($methods as $method)
-      {
-        $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
-        $res = $stripe->paymentMethods->retrieve(
-          $method->stripe_method_id,
-          []
-        );
-        $result[$method->id] = $res;
+        $result = [];
+        foreach($methods as $method)
+        {
+          $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+          $res = $stripe->paymentMethods->retrieve(
+            $method->stripe_method_id,
+            []
+          );
+          $result[$method->id] = $res;
+        }
+        return response()->json($result);
       }
-      return response()->json($result);
+
+      return response()->json([
+          'error'=> 'Error',
+          'message' => 'Not Authorized.'
+      ]);
     }
 }

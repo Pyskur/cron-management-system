@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KeysRef;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class KeysRefController extends Controller
 {
@@ -17,8 +18,15 @@ class KeysRefController extends Controller
      */
     public function index()
     {
-        $keysRef = KeysRef::all();
-        return response()->json($keysRef);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_INDEX)) {
+            $keysRef = KeysRef::all();
+            return response()->json($keysRef);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -29,38 +37,45 @@ class KeysRefController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'ref1' => 'required|string|max:50',
-            'ref2' => 'required|string|max:50',
-            'ref3' => 'required|string|max:50'
+            $validator = Validator::make($input, [
+                'ref1' => 'required|string|max:50',
+                'ref2' => 'required|string|max:50',
+                'ref3' => 'required|string|max:50'
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $keysRef = KeysRef::create($input);
+                return response()->json($keysRef);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "KeysRef store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $keysRef = KeysRef::create($input);
-            return response()->json($keysRef);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "KeysRef store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -71,7 +86,14 @@ class KeysRefController extends Controller
      */
     public function show(KeysRef $keysRef)
     {
-        return response()->json($keysRef);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_SHOW)) {
+            return response()->json($keysRef);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -83,38 +105,45 @@ class KeysRefController extends Controller
      */
     public function update(Request $request, KeysRef $keysRef)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'ref1' => 'nullable|string|max:50',
-            'ref2' => 'nullable|string|max:50',
-            'ref3' => 'nullable|string|max:50'
+            $validator = Validator::make($input, [
+                'ref1' => 'nullable|string|max:50',
+                'ref2' => 'nullable|string|max:50',
+                'ref3' => 'nullable|string|max:50'
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $keysRef->update($input);
+                return response()->json($keysRef);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "KeysRef update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $keysRef->update($input);
-            return response()->json($keysRef);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "KeysRef update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -125,7 +154,14 @@ class KeysRefController extends Controller
      */
     public function destroy(KeysRef $keysRef)
     {
-        $keysRef->delete();
-        return response()->json();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_DESTROY)) {
+            $keysRef->delete();
+            return response()->json();
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

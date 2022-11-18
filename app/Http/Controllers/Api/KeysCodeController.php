@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\KeysCode;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class KeysCodeController extends Controller
 {
@@ -17,8 +18,16 @@ class KeysCodeController extends Controller
      */
     public function index()
     {
-        $keysCodes = KeysCode::all();
-        return response()->json($keysCodes);
+        $user = Auth::user();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_INDEX)) {
+            $keysCodes = KeysCode::all();
+            return response()->json($keysCodes);
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -29,38 +38,45 @@ class KeysCodeController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'type' => 'required|string|max:50',
-            'length' => 'required|numeric',
-            'otp_exp_time' => 'required|numeric'
-        ]);
+            $validator = Validator::make($input, [
+                'type' => 'required|string|max:50',
+                'length' => 'required|numeric',
+                'otp_exp_time' => 'required|numeric'
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $keysCode = KeysCode::create($input);
+                return response()->json($keysCode);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "KeysCode store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
         
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $keysCode = KeysCode::create($input);
-            return response()->json($keysCode);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "KeysCode store error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -71,7 +87,14 @@ class KeysCodeController extends Controller
      */
     public function show(KeysCode $keysCode)
     {
-        return response()->json($keysCode);
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_SHOW)) {
+            return response()->json($keysCode);
+        }
+        
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 
     /**
@@ -83,38 +106,45 @@ class KeysCodeController extends Controller
      */
     public function update(Request $request, KeysCode $keysCode)
     {
-        $input = $request->all();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'type' => 'nullable|string|max:50',
-            'length' => 'nullable|numeric',
-            'otp_exp_time' => 'nullable|numeric'
+            $validator = Validator::make($input, [
+                'type' => 'nullable|string|max:50',
+                'length' => 'nullable|numeric',
+                'otp_exp_time' => 'nullable|numeric'
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $keysCode->update($input);
+                return response()->json($keysCode);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "KeysCode update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+        
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
         ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
-            ]);
-        }
-
-        try {
-            $keysCode->update($input);
-            return response()->json($keysCode);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "KeysCode update error";
-            }
-            return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
-            ]);
-        }
     }
 
     /**
@@ -125,7 +155,14 @@ class KeysCodeController extends Controller
      */
     public function destroy(KeysCode $keysCode)
     {
-        $keysCode->delete();
-        return response()->json();
+        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_DESTROY)) {
+            $keysCode->delete();
+            return response()->json();
+        }
+
+        return response()->json([
+            'error'=> 'Error',
+            'message' => 'Not Authorized.'
+        ]);
     }
 }

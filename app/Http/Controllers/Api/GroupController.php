@@ -9,6 +9,7 @@ use App\Models\UsersGroups;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Permissions\Permission;
 
 class GroupController extends Controller
 {
@@ -19,8 +20,17 @@ class GroupController extends Controller
      */
     public function index()
     {
-        $groups = Group::all();
-        return response()->json($groups);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_GROUP_INDEX)) {
+            $groups = Group::all();
+            return response()->json($groups);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -31,35 +41,44 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        $input = $request->all();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_GROUP_STORE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'name' => 'required|string|max:20',
-            'description' => 'required|string|max:100',
-        ]);
-        
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'name' => 'required|string|max:20',
+                'description' => 'required|string|max:100',
             ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+    
+            try {
+                $group = Group::create($input);
+                return response()->json($group);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Group store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
         }
-
-        try {
-            $group = Group::create($input);
-            return response()->json($group);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
-            }
-            else{
-                $message = "Group store error";
-            }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -72,7 +91,16 @@ class GroupController extends Controller
      */
     public function show(Group $group)
     {
-        return response()->json($group);
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_GROUP_SHOW)) {
+            return response()->json($group);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -83,35 +111,44 @@ class GroupController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Group $group)
-    {
-        $input = $request->all();
+    {        
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_GROUP_UPDATE)) {
+            $input = $request->all();
 
-        $validator = Validator::make($input, [
-            'name' => 'nullable|string|max:50'
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                "error" => "Validation Error",
-                "code"=> 0,
-                "message"=> $validator->errors()
+            $validator = Validator::make($input, [
+                'name' => 'nullable|string|max:50'
             ]);
-        }
 
-        try {
-            $group->update($input);
-            return response()->json($group);
-        } catch (\Exception $e) {
-            if (App::environment('local')) {
-                $message = $e->getMessage();
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
             }
-            else{
-                $message = "Group update error";
+
+            try {
+                $group->update($input);
+                return response()->json($group);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "Group update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
             }
+        }
+        else{
             return response()->json([
-                "error" => "Error",
-                "code"=> 0,
-                "message"=> $message
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
             ]);
         }
     }
@@ -124,8 +161,17 @@ class GroupController extends Controller
      */
     public function destroy(Group $group)
     {
-        $group->delete();
-        return response()->json();
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_GROUP_DESTROY)) {
+            $group->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     public function getUsers(Group $group){

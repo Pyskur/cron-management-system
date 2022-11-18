@@ -62,14 +62,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('users/{user}/companies', [UserController::class, 'getCompanies'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_COMPANIES]);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_GROUPS]);
 
-        Route::get('companies/{company}/users', [CompanyController::class, 'getUsers']);
-        Route::post('companies/add-user', [CompanyController::class, 'addUsertoCompany']);
-        Route::delete('companies/delete-user', [CompanyController::class, 'deleteUserfromCompany']);
-        Route::post('companies/add-group', [CompanyController::class, 'addGrouptoCompany']);
+        Route::get('companies/{company}/users', [CompanyController::class, 'getUsers'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_GET_USERS]);
+        Route::post('companies/add-user', [CompanyController::class, 'addUsertoCompany'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_ADD_USER]);
+        Route::delete('companies/delete-user', [CompanyController::class, 'deleteUserfromCompany'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_DELETE_USER]);
+        Route::post('companies/add-group', [CompanyController::class, 'addGrouptoCompany'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_ADD_GROUP]);
         
-        Route::get('groups/{group}/users', [GroupController::class, 'getUsers']);
-        Route::post('groups/add-user', [GroupController::class, 'addUsertoGroup']);
-        Route::delete('groups/delete-user', [GroupController::class, 'deleteUserfromGroup']);
+        Route::get('groups/{group}/users', [GroupController::class, 'getUsers'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_GROUP_GET_USERS]);
+        Route::post('groups/add-user', [GroupController::class, 'addUsertoGroup'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_GROUP_ADD_USER]);
+        Route::delete('groups/delete-user', [GroupController::class, 'deleteUserfromGroup'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_GROUP_DELETE_USER]);
         
         Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
         Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);

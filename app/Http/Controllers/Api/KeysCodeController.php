@@ -8,6 +8,7 @@ use App\Models\KeysCode;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use App\Models\User;
 
 class KeysCodeController extends Controller
 {
@@ -38,6 +39,7 @@ class KeysCodeController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_STORE)) {
             $input = $request->all();
 
@@ -87,6 +89,7 @@ class KeysCodeController extends Controller
      */
     public function show(KeysCode $keysCode)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_SHOW)) {
             return response()->json($keysCode);
         }
@@ -106,6 +109,7 @@ class KeysCodeController extends Controller
      */
     public function update(Request $request, KeysCode $keysCode)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_UPDATE)) {
             $input = $request->all();
 
@@ -155,6 +159,7 @@ class KeysCodeController extends Controller
      */
     public function destroy(KeysCode $keysCode)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSCODE_DESTROY)) {
             $keysCode->delete();
             return response()->json();

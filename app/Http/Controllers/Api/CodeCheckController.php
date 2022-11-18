@@ -15,19 +15,12 @@ class CodeCheckController extends Controller
      */
     public function __invoke(CodeCheckRequest $request)
     {
-        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_CODECHECK_INVOKE)) {
-            $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
+        $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
 
-            if ($passwordReset->isExpire()) {
-                return response()->json();
-            }
-
-            return response()->json(['code' => $passwordReset->code]);
+        if ($passwordReset->isExpire()) {
+            return response()->json();
         }
 
-        return response()->json([
-            'error'=> 'Error',
-            'message' => 'Not Authorized.'
-        ]);
+        return response()->json(['code' => $passwordReset->code]);
     }
 }

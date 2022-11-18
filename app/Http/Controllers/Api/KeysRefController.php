@@ -8,6 +8,7 @@ use App\Models\KeysRef;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use App\Models\User;
 
 class KeysRefController extends Controller
 {
@@ -18,6 +19,7 @@ class KeysRefController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_INDEX)) {
             $keysRef = KeysRef::all();
             return response()->json($keysRef);
@@ -37,6 +39,7 @@ class KeysRefController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_STORE)) {
             $input = $request->all();
 
@@ -86,6 +89,7 @@ class KeysRefController extends Controller
      */
     public function show(KeysRef $keysRef)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_SHOW)) {
             return response()->json($keysRef);
         }
@@ -105,6 +109,7 @@ class KeysRefController extends Controller
      */
     public function update(Request $request, KeysRef $keysRef)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_UPDATE)) {
             $input = $request->all();
 
@@ -154,6 +159,7 @@ class KeysRefController extends Controller
      */
     public function destroy(KeysRef $keysRef)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSREF_DESTROY)) {
             $keysRef->delete();
             return response()->json();

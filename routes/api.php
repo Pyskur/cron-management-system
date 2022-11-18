@@ -55,9 +55,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
         Route::delete('auth/logout', [AuthController::class,'logout']);
         
-        Route::get('report/daily_report', [ReportController::class, 'daily_report']);
-        Route::get('report/monthly_report', [ReportController::class, 'monthly_report']);
-        Route::get('report/weekly_report', [ReportController::class, 'weekly_report']);
+        Route::get('report/daily_report', [ReportController::class, 'daily_report'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_DAILY_REPORT]);;
+        Route::get('report/monthly_report', [ReportController::class, 'monthly_report'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_Monthly_REPORT]);;
+        Route::get('report/weekly_report', [ReportController::class, 'weekly_report'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_Weekly_REPORT]);;
         
         Route::get('users/{user}/companies', [UserController::class, 'getCompanies'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_COMPANIES]);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_GROUPS]);
@@ -71,19 +71,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('groups/add-user', [GroupController::class, 'addUsertoGroup'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_GROUP_ADD_USER]);
         Route::delete('groups/delete-user', [GroupController::class, 'deleteUserfromGroup'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_GROUP_DELETE_USER]);
         
-        Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications']);
-        Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers']);
-        Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification']);
-        Route::delete('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification']);
+        Route::post('users_notifications/getNotifications', [UsersNotificationsController::class, 'getNotifications'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USERNOTIFICATIONS_GETNOTIFICATIONS]);;
+        Route::post('users_notifications/getUsers', [UsersNotificationsController::class, 'getUsers'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USERNOTIFICATIONS_GETUSERS]);;
+        Route::post('users_notifications/addUsertoNotification', [UsersNotificationsController::class, 'addUsertoNotification'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USERNOTIFICATIONS_ADDUSERTONOTIFICATION]);;
+        Route::delete('users_notifications/deleteUserfromNotification', [UsersNotificationsController::class, 'deleteUserfromNotification'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USERNOTIFICATIONS_DELETEUSERFROMNOTIFICATION]);;
         
-        Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment']);
-        Route::get('payments/i  pn', [PaymentController::class, 'ipn']);
-        Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod']);
-        Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);
-        Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);
+        Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_AUTO_RENEW_USER_PAYMENT]);;
+        Route::get('payments/ipn', [PaymentController::class, 'ipn'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_IPN]);;
+        Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_ADDPAYMENTMETHOD]);;
+        Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE]);;
+        Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS]);;
         
-        Route::post('sms/sendMessage', [SmsController::class, 'sendMessage']);
-        Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage']);
+        Route::post('sms/sendMessage', [SmsController::class, 'sendMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDMESSAGE]);;
+        Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDUSERVERIFICATIONMESSAGE]);;
     
         //Video
         Route::post('videos/upload', [VideoController::class, 'uploadVideo'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_UPLOAD]);

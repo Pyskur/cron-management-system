@@ -8,6 +8,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use App\Models\User;
 
 class OrderController extends Controller
 {
@@ -18,6 +19,7 @@ class OrderController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_INDEX)) {
             $orders = Order::all();
             return response()->json($orders);
@@ -37,6 +39,7 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_STORE)) {
             $input = $request->all();
 
@@ -100,6 +103,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_SHOW)) {
             return response()->json($order);
         }
@@ -119,6 +123,7 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_UPDATE)) {
             $input = $request->all();
 
@@ -182,6 +187,7 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_DESTROY)) {
             $order->delete();
             return response()->json();

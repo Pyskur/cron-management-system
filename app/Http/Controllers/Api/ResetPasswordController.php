@@ -17,47 +17,40 @@ class ResetPasswordController extends Controller
      */
     public function __invoke(Request $request)
     {
-        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_RESETPASSWORD_INVOKE)) {
-            $input = $request->all();
+        $input = $request->all();
 
-            $validator = Validator::make($input, [
-                'code' => 'required|string|exists:reset_code_passwords',
-                'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+        $validator = Validator::make($input, [
+            'code' => 'required|string|exists:reset_code_passwords',
+            'password' => 'required|string|min:8|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+        ]);
+        
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
             ]);
-            
-            if($validator->fails()){
-                return response()->json([
-                    "error" => "Validation Error",
-                    "code"=> 0,
-                    "message"=> $validator->errors()
-                ]);
-            }
-
-            $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
-
-            if ($passwordReset->isExpire()) {
-                return response()->json([
-                    'code' => false,
-                    'error' => 'Failed to reset',
-                    'message' => 'Reset code expired',
-                ]);
-            }
-
-            $user = User::firstWhere('email', $passwordReset->email);
-
-            $user->update([
-                'password' => bcrypt($request->password)
-            ]);
-
-            
-            ResetCodePassword::where('code', $request->code)->delete();
-
-            return response()->json(['userInfo' => $user]);
         }
 
-        return response()->json([
-            'error'=> 'Error',
-            'message' => 'Not Authorized.'
+        $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
+
+        if ($passwordReset->isExpire()) {
+            return response()->json([
+                'code' => false,
+                'error' => 'Failed to reset',
+                'message' => 'Reset code expired',
+            ]);
+        }
+
+        $user = User::firstWhere('email', $passwordReset->email);
+
+        $user->update([
+            'password' => bcrypt($request->password)
         ]);
+
+        
+        ResetCodePassword::where('code', $request->code)->delete();
+
+        return response()->json(['userInfo' => $user]);
     }
 }

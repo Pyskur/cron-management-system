@@ -22,6 +22,7 @@ class SmsController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_INDEX)) {
             $smses = Sms::all();
             return response()->json($smses);
@@ -41,6 +42,7 @@ class SmsController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_STORE)) {
             $input = $request->all();
 
@@ -99,6 +101,7 @@ class SmsController extends Controller
      */
     public function show(Sms $sms)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_SHOW)) {
             return response()->json($sms);
         }
@@ -118,6 +121,7 @@ class SmsController extends Controller
      */
     public function update(Request $request, Sms $sms)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_UPDATE)) {
             $input = $request->all();
 
@@ -174,6 +178,7 @@ class SmsController extends Controller
      */
     public function destroy(Sms $sms)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_DESTROY)) {
             $sms->delete();
             return response()->json();
@@ -204,20 +209,13 @@ class SmsController extends Controller
 
     public function sendUserVerificationMessage(Request $request)
     {
-        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_SENDUSERVERIFICATIONMESSAGE)) {
-            $data = $request->all();
+        $data = $request->all();
 
-            $e = $this->sendUserVerificationMessage_core($data);
-            if($e === 0) {
-                return response()->json(['status'=>'true']);
-            }
-            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+        $e = $this->sendUserVerificationMessage_core($data);
+        if($e === 0) {
+            return response()->json(['status'=>'true']);
         }
-
-        return response()->json([
-            'error'=> 'Error',
-            'message' => 'Not Authorized.'
-        ]);
+        return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
     }
 
     public function sendUserVerificationMessage_core($data)
@@ -241,22 +239,15 @@ class SmsController extends Controller
 
     public function sendMessage(Request $request)
     {
-        if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_SMS_SENDMESSAGE)) {
-            try
-            {
-                $data=$request->all();
-                $this->dispatch(new LeadSendmailJob($data));
-                return response()->json(['status'=>'true']);
-            }
-            catch (\Exception $e)
-            {
-                return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
-            }
+        try
+        {
+            $data=$request->all();
+            $this->dispatch(new LeadSendmailJob($data));
+            return response()->json(['status'=>'true']);
         }
-
-        return response()->json([
-            'error'=> 'Error',
-            'message' => 'Not Authorized.'
-        ]);
+        catch (\Exception $e)
+        {
+            return response()->json(['status'=>'false','msg'=>$e->getMessage()]);
+        }
     }
 }

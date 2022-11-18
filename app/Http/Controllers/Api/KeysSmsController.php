@@ -8,6 +8,7 @@ use App\Models\KeysSms;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use App\Models\User;
 
 class KeysSmsController extends Controller
 {
@@ -18,6 +19,7 @@ class KeysSmsController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_INDEX)) {
             $keysSms = KeysSms::all();
             return response()->json($keysSms);
@@ -37,6 +39,7 @@ class KeysSmsController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_STORE)) {
             $input = $request->all();
 
@@ -87,6 +90,7 @@ class KeysSmsController extends Controller
      */
     public function show(KeysSms $keysSms)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_SHOW)) {
             return response()->json($keysSms);
         }
@@ -106,6 +110,7 @@ class KeysSmsController extends Controller
      */
     public function update(Request $request, KeysSms $keysSms)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_UPDATE)) {
             $input = $request->all();
 
@@ -156,6 +161,7 @@ class KeysSmsController extends Controller
      */
     public function destroy(KeysSms $keysSms)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_KEYSSMS_DELETE)) {
             $keysSms->delete();
             return response()->json();

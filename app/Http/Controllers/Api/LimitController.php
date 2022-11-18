@@ -8,6 +8,7 @@ use App\Models\Limit;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use App\Models\User;
 
 class LimitController extends Controller
 {
@@ -18,6 +19,7 @@ class LimitController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_INDEX)) {
             $limits = Limit::all();
             return response()->json($limits);
@@ -37,6 +39,7 @@ class LimitController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_STORE)) {
             $input = $request->all();
 
@@ -87,6 +90,7 @@ class LimitController extends Controller
      */
     public function show(Limit $limit)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_SHOW)) {
             return response()->json($limit);
         }
@@ -106,6 +110,7 @@ class LimitController extends Controller
      */
     public function update(Request $request, Limit $limit)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_UPDATE)) {
             $input = $request->all();
 
@@ -156,6 +161,7 @@ class LimitController extends Controller
      */
     public function destroy(Limit $limit)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_LIMIT_DELETE)) {
             $limit->delete();
             return response()->json();

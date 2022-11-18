@@ -8,6 +8,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use App\Models\User;
 
 class NotificationController extends Controller
 {
@@ -18,6 +19,7 @@ class NotificationController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_INDEX)) {
             $notifications = Notification::all();
             return response()->json($notifications);
@@ -37,6 +39,7 @@ class NotificationController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_STORE)) {
             $input = $request->all();
 
@@ -86,6 +89,7 @@ class NotificationController extends Controller
      */
     public function show(Notification $notification)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_SHOW)) {
             return response()->json($notification);
         }
@@ -105,6 +109,7 @@ class NotificationController extends Controller
      */
     public function update(Request $request, Notification $notification)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_UPDATE)) {
             $input = $request->all();
 
@@ -154,6 +159,7 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
+        $user = Auth::user();
         if($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_NOTIFICATION_DESTROY)) {
             $notification->delete();
             return response()->json();

@@ -265,7 +265,7 @@ class UserController extends Controller
         $balance = Billing::firstWhere('type', $type)->amount;
 
         $newdata = [];
-        $newdata['balance'] = $user->balance - $balance;
+        $newdata['balance'] = $user->balance - $balance * $size;
 
         if ($newdata['balance'] < 0) {
             return false;

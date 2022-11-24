@@ -211,7 +211,7 @@ class BillingController extends Controller
         
         $databaseName = 'videodb';
         $catalog = 'AwsDataCatalog';
-        $sql = 'SELECT * FROM "videodb"."videodb" where request_uri like \'%GET%\' and objectsize > 0 and bytessent > 0 and parse_datetime(requestdatetime,\'dd/MMM/yyyy:HH:mm:ss Z\') BETWEEN parse_datetime(\'2022-11-23\',\'yyyy-MM-dd\') AND parse_datetime(\'2022-11-24\',\'yyyy-MM-dd\')';
+        $sql = 'SELECT * FROM "videodb"."videodb" where request_uri like \'%GET%\' and objectsize > 0 and bytessent > 0 and parse_datetime(requestdatetime,\'dd/MMM/yyyy:HH:mm:ss Z\') BETWEEN parse_datetime(\''.date('Y-m-d').'\',\'yyyy-MM-dd\') AND parse_datetime(\''.date('Y-m-d', strtotime(' +1 day')).'\',\'yyyy-MM-dd\')';
         $outputS3Location = 's3://veri-vod-logs6819bb44-kg1h6qo3dy7x/destination-bucket-logs/';
         
          $startQueryResponse = $athenaClient->startQueryExecution([
@@ -279,6 +279,9 @@ class BillingController extends Controller
             if($info)
             {
                 $bytes_per_video[$key]["user_id"] = $info->user_id;
+
+                $user = new UserController;
+                $user->updateBalance($request->email, 'Bandwidth', $bytes_per_video[$key]["amount"]);
             }
         }
 

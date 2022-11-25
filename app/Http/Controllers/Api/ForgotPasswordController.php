@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\ResetCodePassword;
-use App\Mail\SendCodeResetPassword;
+use App\Http\Controllers\Mail\SendCodeResetPassword;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\Auth\ForgotPasswordRequest;

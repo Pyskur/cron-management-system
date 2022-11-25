@@ -197,7 +197,7 @@ class BillingController extends Controller
         }
     }
 
-    public function bandwidth(Request $request)
+    public function bandwidth()
     {
         $options = [
             'version' => 'latest',

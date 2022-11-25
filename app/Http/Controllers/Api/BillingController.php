@@ -281,7 +281,7 @@ class BillingController extends Controller
                 $bytes_per_video[$key]["user_id"] = $info->user_id;
 
                 $user = new UserController;
-                $user->updateBalance($request->email, 'Bandwidth', $bytes_per_video[$key]["amount"]);
+                $user->updateBalance($info->email, 'Bandwidth', $bytes_per_video[$key]["amount"]);
             }
         }
 

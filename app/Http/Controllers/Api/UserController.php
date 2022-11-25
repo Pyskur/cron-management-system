@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Billing;
+use App\Models\billingdetails;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Auth;
@@ -262,7 +263,14 @@ class UserController extends Controller
     public function updateBalance($email, $type, $size = 1)
     {
         $user = User::firstWhere('email', $email);
-        $balance = Billing::firstWhere('type', $type)->amount;
+        $billtype = Billing::firstWhere('type', $type);
+        $balance = $billtype->amount;
+
+        billingdetails::create([
+            "type" => $billtype->id,
+            "amount" => $size,
+            "user_id" => $user->id
+        ]);
 
         $newdata = [];
         $newdata['balance'] = $user->balance - $balance * $size;

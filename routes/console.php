@@ -431,23 +431,31 @@ Artisan::command('db:setup', function () {
 
         //DynamoDB
         $dynamodbClient = \AWS::createClient('DynamoDB');
-        try {
-            $tableName = 'users_api_histories';
-            $dynamodbClient->createTable([
-                'TableName' => $tableName,
-            ]);
-        } catch (AwsException $e) {
-            return [
-                'Error' => 'Error: ' . $e->getAwsErrorMessage()
-            ];
+        $history_table = $dynamodbClient->describeTable(array(
+            'TableName' => 'users_api_histories'
+        ));
+
+        if (!$history_table) {
+            try {
+                $tableName = 'users_api_histories';
+                $dynamodbClient->createTable([
+                    'TableName' => $tableName,
+                ]);
+            } catch (AwsException $e) {
+                return [
+                    'Error' => 'Error: ' . $e->getAwsErrorMessage()
+                ];
+            }    
+            $this->info("--DynamoDB Done");
+        } else {
+            $this->comment("--There is already DynamoDB user_api_histories table");
         }
-        $this->info("--DynamoDB Done");
 
         //Add Billings
-        Billing::create(['type'=>'Storage', 'amount' => 1]);
-        Billing::create(['name'=>'Bandwidth', 'amount' =>0.15]);
-        Billing::create(['name'=>'Otp', 'amount' =>0.06]);
-        Billing::create(['name'=>'Cron', 'amount' =>0.0000002]);
+        Billing::create(['type' => 'Storage', 'amount' => 1]);
+        Billing::create(['type' => 'Bandwidth', 'amount' => 0.15]);
+        Billing::create(['type' => 'Otp', 'amount' => 0.06]);
+        Billing::create(['type' => 'Cron', 'amount' => 0.0000002]);
         $this->info("--Billing Table Done");
 
         //Mark setup is done

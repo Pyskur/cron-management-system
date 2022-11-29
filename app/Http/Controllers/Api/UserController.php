@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Auth;
 use function Ramsey\Uuid\v1;
+use App\Permissions\Permission;
 
 class UserController extends Controller
 {
@@ -260,9 +261,11 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function updateBalance($email, $type, $size = 1)
+    public function updateBalance($email, $type, $size = 1, $method = 0)
     {
-        $user = User::firstWhere('email', $email);
+        $field = 'email';
+        if($method) $field = 'id';
+        $user = User::firstWhere($field, $email);
         $billtype = Billing::firstWhere('type', $type);
         $balance = $billtype->amount;
 
@@ -275,11 +278,11 @@ class UserController extends Controller
         $newdata = [];
         $newdata['balance'] = $user->balance - $balance * $size;
 
+        $user->update($newdata);
+
         if ($newdata['balance'] < 0) {
             return false;
         }
-
-        $user->update($newdata);
 
         return true;
     }

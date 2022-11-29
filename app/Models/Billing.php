@@ -12,5 +12,7 @@ class Billing extends Model
     protected $fillable = [
         'type',
         'amount',
+        'created_at',
+        'updated_at'
     ];
 }

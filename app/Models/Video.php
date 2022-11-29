@@ -28,12 +28,15 @@ class Video extends Model
         'geo_group_id',
         'publish_date',
         'unpublish_date',
-        'thumbnail_count'
+        'thumbnail_count',
+        'length',
+        'views',
+        'cost',
+        'created_at',
+        'updated_at'
     ];
 
     protected $hidden = [
-        'created_at',
-        'updated_at',
     ];
 
     public function geoGroup()

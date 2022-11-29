@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use GoldSpecDigital\LaravelEloquentUUID\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 
 class Billing extends Model
 {
@@ -12,7 +12,10 @@ class Billing extends Model
     protected $fillable = [
         'type',
         'amount',
+    ];
+
+    protected $hidden = [
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 }

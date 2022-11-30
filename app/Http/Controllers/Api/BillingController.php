@@ -265,6 +265,8 @@ class BillingController extends Controller
             }
             
             // parse video ID
+            if(substr($data[$i - 1]['key'], 0, 4) == "test") continue ;
+
             $data[$i - 1]["videoID"] = substr(explode("/", $data[$i - 1]['key'])[3], 0, 36);
             $bytes_per_video[$data[$i - 1]["videoID"]] = array();
             $bytes_per_video[$data[$i - 1]["videoID"]]["amount"] = 0;

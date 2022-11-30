@@ -269,11 +269,11 @@ class UserController extends Controller
         $billtype = Billing::firstWhere('type', $type);
         $balance = $billtype->amount;
 
-        billingdetails::create([
+        /* billingdetails::create([
             "type" => $billtype->id,
             "amount" => $size,
             "user_id" => $user->id
-        ]);
+        ]); */
 
         $newdata = [];
         $newdata['balance'] = $user->balance - $balance * $size;

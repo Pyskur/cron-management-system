@@ -265,7 +265,11 @@ class BillingController extends Controller
             }
             
             // parse video ID
-            if(substr($data[$i - 1]['key'], 0, 4) == "test") continue ;
+            if(substr($data[$i - 1]['key'], 0, 4) == "test")
+            {
+                $data[$i - 1]["videoID"] = "test";
+                continue ;
+            }
 
             $data[$i - 1]["videoID"] = substr(explode("/", $data[$i - 1]['key'])[3], 0, 36);
             $bytes_per_video[$data[$i - 1]["videoID"]] = array();
@@ -275,6 +279,7 @@ class BillingController extends Controller
     
         for($i = 0 ; $i < count($data) ; $i ++)
         {
+            if($data[$i]["videoID"] == "test") continue ;
             $bytes_per_video[$data[$i]["videoID"]]["amount"] += $data[$i]["bytessent"];
             $bytes_per_video[$data[$i]["videoID"]]["viewed"] ++;
         }

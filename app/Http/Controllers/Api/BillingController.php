@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Billing;
 use App\Models\billingdetails;
 use App\Models\Video;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
@@ -287,12 +288,28 @@ class BillingController extends Controller
                 // $user->updateBalance($info->user_id, 'Bandwidth', $bytes_per_video[$key]["amount"] / 1024 / 1024 / 1024, 1);
 
                 $billtype = Billing::firstWhere('type', 'Bandwidth');
-                billingdetails::create([
-                    "type" => $billtype->id,
-                    "amount" => $bytes_per_video[$key]["amount"],
-                    "user_id" => $info->user_id,
-                    'billed' => 0
-                ]);
+                $billdetail = billingdetails::where('type', $billtype->id)->where('user_id', $info->user_id)->get()->first();
+                $used_bytes = $bytes_per_video[$key]["amount"] + ($billdetail ? $billdetail->amount : 0);
+                if($used_bytes / 1024 / 1024 / 1024 * $billtype->amount > 0.01)
+                {
+                    $bal = floor($used_bytes / 1024 / 1024 / 1024 * $billtype->amount * 100) / 100;
+                    $used_bytes = floor($used_bytes - $bal * 1024 * 1024 * 1024 / $billtype->amount);
+
+                    $user = User::firstWhere('id', $info->user_id);
+                    User::where('id', $info->user_id)->update(['balance' => $user->balance]);
+                }
+                if($billdetail)
+                {
+                    billingdetails::where('type', $billtype->id)->where('user_id', $info->user_id)->update(['amount' => $used_bytes]);
+                }
+                else
+                {
+                    billingdetails::create([
+                        "type" => $billtype->id,
+                        "amount" => $used_bytes,
+                        "user_id" => $info->user_id
+                    ]);
+                }
 
                 $updates = ['views' => $info->views + $bytes_per_video[$key]['viewed'],
                             'bytes' => $info->bytes + $bytes_per_video[$key]['amount'],

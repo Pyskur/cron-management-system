@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Models\Billing;
+use App\Models\billingdetails;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Validator;
@@ -266,11 +267,13 @@ class BillingController extends Controller
             $data[$i - 1]["videoID"] = substr(explode("/", $data[$i - 1]['key'])[3], 0, 36);
             $bytes_per_video[$data[$i - 1]["videoID"]] = array();
             $bytes_per_video[$data[$i - 1]["videoID"]]["amount"] = 0;
+            $bytes_per_video[$data[$i - 1]["videoID"]]["viewed"] = 0;
          }
     
         for($i = 0 ; $i < count($data) ; $i ++)
         {
             $bytes_per_video[$data[$i]["videoID"]]["amount"] += $data[$i]["bytessent"];
+            $bytes_per_video[$data[$i]["videoID"]]["viewed"] ++;
         }
 
         foreach($bytes_per_video as $key => $item)
@@ -280,8 +283,21 @@ class BillingController extends Controller
             {
                 $bytes_per_video[$key]["user_id"] = $info->user_id;
 
-                $user = new UserController;
-                $user->updateBalance($info->user_id, 'Bandwidth', $bytes_per_video[$key]["amount"] / 1024 / 1024 / 1024, 1);
+                // $user = new UserController;
+                // $user->updateBalance($info->user_id, 'Bandwidth', $bytes_per_video[$key]["amount"] / 1024 / 1024 / 1024, 1);
+
+                $billtype = Billing::firstWhere('type', 'Bandwidth');
+                billingdetails::create([
+                    "type" => $billtype->id,
+                    "amount" => $bytes_per_video[$key]["amount"],
+                    "user_id" => $info->user_id,
+                    'billed' => 0
+                ]);
+
+                $updates = ['views' => $info->views + $bytes_per_video[$key]['viewed'],
+                            'bytes' => $info->bytes + $bytes_per_video[$key]['amount'],
+                            'cost' => ($info->bytes + $bytes_per_video[$key]['amount']) / 1024 / 1024 / 1024];
+                Video::where('uuid', $key)->update($updates);
             }
         }
 

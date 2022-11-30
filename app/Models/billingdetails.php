@@ -13,6 +13,7 @@ class billingdetails extends Model
         'type',
         'amount',
         'user_id',
+        'billed'
     ];
 
     protected $hidden = [

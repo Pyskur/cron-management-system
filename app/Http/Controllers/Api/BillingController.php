@@ -320,7 +320,7 @@ class BillingController extends Controller
 
                 $updates = ['views' => $info->views + $bytes_per_video[$key]['viewed'],
                             'bytes' => $info->bytes + $bytes_per_video[$key]['amount'],
-                            'cost' => ($info->bytes + $bytes_per_video[$key]['amount']) / 1024 / 1024 / 1024];
+                            'cost' => ($info->bytes + $bytes_per_video[$key]['amount']) / 1024 / 1024 / 1024 * $billtype->amount];
                 Video::where('uuid', $key)->update($updates);
             }
         }

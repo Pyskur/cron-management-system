@@ -303,7 +303,7 @@ class BillingController extends Controller
                     $used_bytes = floor($used_bytes - $bal * 1024 * 1024 * 1024 / $billtype->amount);
 
                     $user = User::firstWhere('id', $info->user_id);
-                    User::where('id', $info->user_id)->update(['balance' => $user->balance]);
+                    User::where('id', $info->user_id)->update(['balance' => $user->balance - $bal]);
                 }
                 if($billdetail)
                 {

@@ -468,17 +468,12 @@ class VideoController extends Controller
 
                 $outputURLAPPLE = str_replace($originPrefix, $cdnDomainName, $outputURL_APPLE);
                 $outputURLDASH = str_replace($originPrefix, $cdnDomainName, $outputURL_DASHISO);
-
-            }
+             }
             else{
                 $kid = null;
                 $outputURLAPPLE = null;
                 $outputURLDASH = null;
             }
-
-
-
-
             //update video table with out result information
             $video->update([
                 'status' => self::VIDEO_STATUS_AVAILABLE,

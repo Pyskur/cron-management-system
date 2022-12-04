@@ -33,6 +33,9 @@ class Video extends Model
         'views',
         'cost',
         'bytes',
+        'out_url_apple',
+        'out_url_dash',
+        'drm_keyid',
         'created_at',
         'updated_at'
     ];

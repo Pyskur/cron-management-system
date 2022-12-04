@@ -9,6 +9,7 @@
         "aws/aws-sdk-php-laravel": "^3.7",
         "dirape/token": "^2.3",
         "doctrine/dbal": "^3.4",
+        "firebase/php-jwt": "^6.3",
         "goldspecdigital/laravel-eloquent-uuid": "9.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/cashier": "^14.2",

@@ -10,22 +10,20 @@ class PinToken extends Model
     use HasFactory;
 
     protected $fillable = [
-        'referable_id',
-        'referable_type', 
-        'reference_type',
-        'reference_token',
-        'pin',
+        'id',
+        'mobile_number',
+        'passcode',
         'expired_at',
+    ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [
         'expired_at' => 'datetime'
     ];
-
-    public function referable()
-    {
-        return $this->morphTo();
-    }
 
     public function isExpired()
     {

@@ -15,7 +15,6 @@ return new class extends Migration
     {
         Schema::create('pin_tokens', function (Blueprint $table) {
             $table->id();
-            $table->morphs('referable');
             $table->string('passcode')->index();
             $table->dateTime('expired_at')->index();
             $table->timestamps();

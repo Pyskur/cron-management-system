@@ -32,6 +32,7 @@ class Video extends Model
         'length',
         'views',
         'cost',
+        'bytes',
         'created_at',
         'updated_at'
     ];

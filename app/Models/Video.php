@@ -52,7 +52,7 @@ class Video extends Model
         if($this->publish_date){
             $now = new \DateTime("now");
             $publishDate = new \DateTime($this->publish_date);
-            if($publishDate >= $now)
+            if($publishDate <= $now)
                 return true;
             else
                 return false;

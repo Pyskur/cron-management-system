@@ -873,82 +873,100 @@ class VideoController extends Controller
         }
     }
 
-    public function getPlaybackUrl(Video $video)
+    public function getPlaybackUrl(Request $request, Video $video)
     {
-        if($video->isPublished() && !$video->isExpired()){
-            if($video->drm_enabled){
-                $validFrom = date(DATE_ATOM, strtotime("yesterday"));
-                $validTo = date(DATE_ATOM, strtotime("tomorrow"));
-                $message = [
-                    "type" => "entitlement_message",
-                    "version" => 2,
-                    "license" => [
-                        "start_datetime" => $validFrom,
-                        "expiration_datetime" => $validTo,
-                        "allow_persistence" => true
-                    ],
-    
-                    "content_keys_source" => [
-                        "inline" => [
+        if($video->status == self::VIDEO_STATUS_AVAILABLE){
+            if($video->isPublished() && !$video->isExpired()){
+                if($video->drm_enabled){
+                    $outUrl = $video->out_url;
+                    if($request->browser == "chrome"){
+                        $outUrl = $video->out_url_dash;
+                    }
+                    else if($request->browser == "safari"){
+                        $outUrl = $video->out_url_apple;
+                    }
+                    $validFrom = date(DATE_ATOM, strtotime("yesterday"));
+                    $validTo = date(DATE_ATOM, strtotime("tomorrow"));
+                    $message = [
+                        "type" => "entitlement_message",
+                        "version" => 2,
+                        "license" => [
+                            "start_datetime" => $validFrom,
+                            "expiration_datetime" => $validTo,
+                            "allow_persistence" => true
+                        ],
+        
+                        "content_keys_source" => [
+                            "inline" => [
+                                [
+                                    "id" => $video->drm_keyid,
+                                    "usage_policy" => "Policy A"		
+                                ] 
+                            ]
+                        ],
+        
+                        // NOTE: This is for global
+                        // The keys list will be filled separately by the next code block.
+                        // "content_keys_source" => [
+                        //     "license_request" => [
+                        //       "seed_id" => env('AXINOM_KEY_SEED_ID'),
+                        //       "usage_policy" => "Policy A"
+                        //     ]
+                        // ],
+                        
+                        // License configuration should be as permissive as possible for the scope of this guide.
+                        // For this reason, some PlayReady-specific restrictions are relaxed below.
+                        // There is no need to relax the default Widevine or FairPlay specific restrictions.
+                        "content_key_usage_policies" => [
                             [
-                                "id" => $video->drm_keyid,
-                                "usage_policy" => "Policy A"		
-                            ] 
+                                "name" => "Policy A"
+                            ]
                         ]
-                    ],
-    
-                    // NOTE: This is for global
-                    // The keys list will be filled separately by the next code block.
-                    // "content_keys_source" => [
-                    //     "license_request" => [
-                    //       "seed_id" => env('AXINOM_KEY_SEED_ID'),
-                    //       "usage_policy" => "Policy A"
-                    //     ]
-                    // ],
-                    
-                    // License configuration should be as permissive as possible for the scope of this guide.
-                    // For this reason, some PlayReady-specific restrictions are relaxed below.
-                    // There is no need to relax the default Widevine or FairPlay specific restrictions.
-                    "content_key_usage_policies" => [
+                    ];
+        
+                    $envelope = [
+                        "version" => 1,
+                        "com_key_id" => env('AXINOM_COM_KEY_ID'),
+                        "message" => $message,
+                        "begin_date" => $validFrom,
+                        "expiration_date" => $validTo
+                    ];
+                    $key = base64_decode(env('AXINOM_COM_KEY'));
+                    $licenseToken = \Firebase\JWT\JWT::encode($envelope, $key, 'HS256');
+                    return response()->json(
                         [
-                            "name" => "Policy A"
+                            "url" => $outUrl,
+                            "licenseToken" => $licenseToken
+                        ], 200,
+                        [
+                            'Access-Control-Allow-Origin' =>'*'
                         ]
-                    ]
-                ];
-    
-                $envelope = [
-                    "version" => 1,
-                    "com_key_id" => env('AXINOM_COM_KEY_ID'),
-                    "message" => $message,
-                    "begin_date" => $validFrom,
-                    "expiration_date" => $validTo
-                ];
-                $key = base64_decode(env('AXINOM_COM_KEY'));
-                $licenseToken = \Firebase\JWT\JWT::encode($envelope, $key, 'HS256');
-                return response()->json(
-                    [
-                        "url" => $video->out_url,
-                        "licenseToken" => $licenseToken
-                    ], 200,
-                    [
-                        'Access-Control-Allow-Origin' =>'*'
-                    ]
-                );
+                    );
+                }
+                else{
+                    return response()->json(
+                        [
+                            "url" => $video->out_url
+                        ]
+                    );
+                }
             }
             else{
                 return response()->json(
                     [
-                        "url" => $video->out_url
+                        "message"=>"expired"
                     ]
                 );
             }
         }
-        else
+        else{
             return response()->json(
                 [
-                    "message"=>"expired"
+                    "message"=>"video is not ready."
                 ]
             );
+        }
+        
     }
     public function getThumbnailsList(Video $video)
     {

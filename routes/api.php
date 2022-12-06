@@ -130,6 +130,7 @@ Route::prefix('auth')->group(function () {
     Route::get('login_required', [AuthController::class, 'login_required'])->name('login');
     Route::post('email_verification', [AuthController::class, 'email_verification']);
 	Route::post('token', [AuthController::class, 'loginWithApiKey']);
+    Route::post('passcode', [AuthController::class, 'verifyWithPasscode']);
     Route::post('password/email', ForgotPasswordController::class);
     Route::post('password/code/check', CodeCheckController::class);
     Route::post('password/reset', ResetPasswordController::class); 
@@ -140,4 +141,5 @@ Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackU
 Route::apiResource('video_players', VideoPlayerController::class)->only([
     'show'
 ]);
+Route::get('/send', '\App\Http\Controllers\HomeController@send')->name('home.send');
 

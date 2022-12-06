@@ -6,6 +6,7 @@ use App\Models\ResetCodePassword;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\CodeCheckRequest;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class CodeCheckController extends Controller
 {

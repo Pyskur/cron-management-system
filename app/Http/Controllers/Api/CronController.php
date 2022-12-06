@@ -8,6 +8,8 @@ use App\Models\Cron;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
+
 class CronController extends Controller
 {
     /**

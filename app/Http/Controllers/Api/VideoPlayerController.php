@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
+
 class VideoPlayerController extends Controller
 {
     /**

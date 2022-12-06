@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 use Aws\Athena\AthenaClient;
 

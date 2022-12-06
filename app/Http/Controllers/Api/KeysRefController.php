@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class KeysRefController extends Controller
 {

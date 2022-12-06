@@ -8,6 +8,8 @@ use App\Models\Epd;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
+
 class EpdController extends Controller
 {
     /**

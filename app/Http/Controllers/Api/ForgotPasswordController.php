@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Models\User;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class ForgotPasswordController extends Controller
 {

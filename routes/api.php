@@ -134,12 +134,10 @@ Route::prefix('auth')->group(function () {
     Route::post('password/email', ForgotPasswordController::class);
     Route::post('password/code/check', CodeCheckController::class);
     Route::post('password/reset', ResetPasswordController::class); 
-});    
+});
 
 Route::post('videos/hook-receive', [VideoController::class, 'hookVideoUploaded']);
 Route::get('videos/playback-url/{video}', [VideoController::class, 'getPlaybackUrl']);
 Route::apiResource('video_players', VideoPlayerController::class)->only([
     'show'
 ]);
-Route::get('/send', '\App\Http\Controllers\HomeController@send')->name('home.send');
-

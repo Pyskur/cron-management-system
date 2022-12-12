@@ -7,7 +7,6 @@ use Validator;
 use App\Models\User;
 use App\Models\Key;
 use App\Models\UsersLoginIps;
-use App\Models\UsersApiHistories;
 
 class AuthController extends Controller
 {
@@ -117,15 +116,41 @@ class AuthController extends Controller
                     ], 400);
                 }
             }
-            $logindata = [
-                'user_id' => $user_id,
-                'ip' => $user_ip,
-                'api_path' => '',
-            ];
-            // UsersApiHistories::create($logindata);
+
+            $pintoken = new PinTokenController;
+            $passcode = $pintoken->setPasscode(['user_email' => $request->email]);
 
             return response()->json([
-                'api_token' => $token
+                'api_token' => $token,
+            ], 200);
+        } else {
+            return response()->json([
+                'code' => false,
+                'message' => 'Invalid Credentials',
+            ], 400);
+        }
+    }
+
+    public function verfiyWithPasscode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:100|unique:users',
+            'passcode' => 'required|numeric|size:6'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => false,
+                'message' => 'Invalid Inputs',
+                'error' => $validator->errors()
+            ], 422);
+        }
+
+        $passcode = PinToken::where('mobile_number', $request->email)->first()->passcode;
+
+        if ($passcode = $request->passcode) {
+            return response()->json([
+                'message' => 'Success',
             ], 200);
         } else {
             return response()->json([

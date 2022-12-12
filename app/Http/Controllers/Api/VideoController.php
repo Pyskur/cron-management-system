@@ -291,10 +291,6 @@ class VideoController extends Controller
                 "error" => "Validation Error",
                 "code"=> 0,
                 "message"=> $validator->errors()
-            ], 200,
-            [
-                'Access-Control-Allow-Origin' =>'*',
-                'Access-Control-Allow-Methods' => '*'
             ]);
         }
 
@@ -340,10 +336,6 @@ class VideoController extends Controller
                 "error" => "Error",
                 "code" =>  0,
                 "message" => "Cannot upload video. Geo Retriction is no valid."
-            ], 200,
-            [
-                'Access-Control-Allow-Origin' =>'*',
-                'Access-Control-Allow-Methods' => '*'
             ]);
         }
 
@@ -384,10 +376,6 @@ class VideoController extends Controller
             "result" =>  $result,
             "src_path" =>  $path,
             "video_id" => $video->id
-        ], 200,
-        [
-            'Access-Control-Allow-Origin' =>'*',
-            'Access-Control-Allow-Methods' => '*'
         ]);
     }
     /**
@@ -949,9 +937,6 @@ class VideoController extends Controller
                         [
                             "url" => $outUrl,
                             "licenseToken" => $licenseToken
-                        ], 200,
-                        [
-                            'Access-Control-Allow-Origin' =>'*'
                         ]
                     );
                 }
@@ -1057,14 +1042,8 @@ class VideoController extends Controller
     
     public function test(Request $request)
     {
-
-        //Test
-        $dest_url = "EY6CESNM58DSQ/a9fc8797-e6d2-4337-a4e2-e7ccd8bf895d/DASHISO1/ac5c6969-38d8-4f6e-bbfe-410f3acc1347_drm.mpd";
-        $content = Storage::disk('s3-dest')->get($dest_url);
-        preg_match("/default_KID=\"([0-9a-z-]*)\"/", $content, $matched);
-        $kid = $matched[1];
         return response()->json([
-            'message' => $kid
+            'message' => 'success'
         ]);
     }
 

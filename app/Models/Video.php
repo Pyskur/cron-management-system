@@ -32,6 +32,10 @@ class Video extends Model
         'length',
         'views',
         'cost',
+        'bytes',
+        'out_url_apple',
+        'out_url_dash',
+        'drm_keyid',
         'created_at',
         'updated_at'
     ];
@@ -48,7 +52,7 @@ class Video extends Model
         if($this->publish_date){
             $now = new \DateTime("now");
             $publishDate = new \DateTime($this->publish_date);
-            if($publishDate >= $now)
+            if($publishDate <= $now)
                 return true;
             else
                 return false;

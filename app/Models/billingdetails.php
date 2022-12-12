@@ -12,7 +12,7 @@ class billingdetails extends Model
     protected $fillable = [
         'type',
         'amount',
-        'user_id',
+        'user_id'
     ];
 
     protected $hidden = [

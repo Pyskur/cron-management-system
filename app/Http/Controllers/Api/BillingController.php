@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Models\Billing;
+use App\Models\billingdetails;
 use App\Models\Video;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
@@ -263,14 +265,23 @@ class BillingController extends Controller
             }
             
             // parse video ID
+            if(substr($data[$i - 1]['key'], 0, 4) == "test")
+            {
+                $data[$i - 1]["videoID"] = "test";
+                continue ;
+            }
+
             $data[$i - 1]["videoID"] = substr(explode("/", $data[$i - 1]['key'])[3], 0, 36);
             $bytes_per_video[$data[$i - 1]["videoID"]] = array();
             $bytes_per_video[$data[$i - 1]["videoID"]]["amount"] = 0;
+            $bytes_per_video[$data[$i - 1]["videoID"]]["viewed"] = 0;
          }
     
         for($i = 0 ; $i < count($data) ; $i ++)
         {
+            if($data[$i]["videoID"] == "test") continue ;
             $bytes_per_video[$data[$i]["videoID"]]["amount"] += $data[$i]["bytessent"];
+            $bytes_per_video[$data[$i]["videoID"]]["viewed"] ++;
         }
 
         foreach($bytes_per_video as $key => $item)
@@ -280,8 +291,37 @@ class BillingController extends Controller
             {
                 $bytes_per_video[$key]["user_id"] = $info->user_id;
 
-                $user = new UserController;
-                $user->updateBalance($info->user_id, 'Bandwidth', $bytes_per_video[$key]["amount"] / 1024 / 1024 / 1024, 1);
+                // $user = new UserController;
+                // $user->updateBalance($info->user_id, 'Bandwidth', $bytes_per_video[$key]["amount"] / 1024 / 1024 / 1024, 1);
+
+                $billtype = Billing::firstWhere('type', 'Bandwidth');
+                $billdetail = billingdetails::where('type', $billtype->id)->where('user_id', $info->user_id)->get()->first();
+                $used_bytes = $bytes_per_video[$key]["amount"] + ($billdetail ? $billdetail->amount : 0);
+                if($used_bytes / 1024 / 1024 / 1024 * $billtype->amount > 0.01)
+                {
+                    $bal = floor($used_bytes / 1024 / 1024 / 1024 * $billtype->amount * 100) / 100;
+                    $used_bytes = floor($used_bytes - $bal * 1024 * 1024 * 1024 / $billtype->amount);
+
+                    $user = User::firstWhere('id', $info->user_id);
+                    User::where('id', $info->user_id)->update(['balance' => $user->balance - $bal]);
+                }
+                if($billdetail)
+                {
+                    billingdetails::where('type', $billtype->id)->where('user_id', $info->user_id)->update(['amount' => $used_bytes]);
+                }
+                else
+                {
+                    billingdetails::create([
+                        "type" => $billtype->id,
+                        "amount" => $used_bytes,
+                        "user_id" => $info->user_id
+                    ]);
+                }
+
+                $updates = ['views' => $info->views + $bytes_per_video[$key]['viewed'],
+                            'bytes' => $info->bytes + $bytes_per_video[$key]['amount'],
+                            'cost' => ($info->bytes + $bytes_per_video[$key]['amount']) / 1024 / 1024 / 1024 * $billtype->amount];
+                Video::where('uuid', $key)->update($updates);
             }
         }
 

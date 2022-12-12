@@ -281,6 +281,7 @@ class VideoController extends Controller
             'file' => 'required|mimetypes:video/x-ms-asf,video/x-flv,video/mp4,application/x-mpegURL,video/MP2T,video/3gpp,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/avi',
             'publish_date' => 'date_format:Y-m-d H:i:s',
             'unpublish_date' => 'date_format:Y-m-d H:i:s',
+            'drm_enabled' =>'boolean',
             'black_list' => 'string|regex:/^(\[[a-z0-9, \-\"]*\])$/',
             'white_list' => 'string|regex:/^(\[[a-z0-9, \-\"]*\])$/'
         ]);
@@ -290,11 +291,13 @@ class VideoController extends Controller
                 "error" => "Validation Error",
                 "code"=> 0,
                 "message"=> $validator->errors()
+            ], 200,
+            [
+                'Access-Control-Allow-Origin' =>'*'
             ]);
         }
 
         //Get Info of File
-        $uuid = (string) Str::uuid();
         $fileName = $request->file->getClientOriginalName();
         $fileExt = $request->file->getClientOriginalExtension();
         $fileSize = $request->file->getSize();
@@ -336,11 +339,15 @@ class VideoController extends Controller
                 "error" => "Error",
                 "code" =>  0,
                 "message" => "Cannot upload video. Geo Retriction is no valid."
+            ], 200,
+            [
+                'Access-Control-Allow-Origin' =>'*'
             ]);
         }
 
         //insert video table
         $path = $request->path != null ? $request->path : "/";
+        $drm_enabled = $request->drm_enabled == null ? 0 : ($request->drm_enabled == 1 || $request->drm_enabled == "1" || $request->drm_enabled == true ? 1 : 0);
         $newVideo = [
             'title' => $request->title,
             'path' => $path,
@@ -348,16 +355,18 @@ class VideoController extends Controller
             'status' => self::VIDEO_STATUS_CREATED,
             'file_size' => $fileSize,
             'user_id' => $userid,
-            'uuid'=> $uuid,
+            'uuid'=> '',
             'geo_group_id' => $geoGroupID,
             'publish_date'=> $request->publish_date,
-            'unpublish_date'=> $request->unpublish_date
+            'unpublish_date'=> $request->unpublish_date,
+            'drm_enabled' => $drm_enabled
         ];
         $video = Video::create($newVideo);
 
         $videoSubDirectory = $video->geoGroup->awsCloudfrontDistribution->dist_id;
         //Upload to S3 bucket
-        $filePath = env('AWS_S3_BUCKET_FOLDER', 'assets01')."/videos/". $videoSubDirectory."/" . $uuid. ".".$fileExt;
+        $suffix = $drm_enabled == 1 ? "_drm" : "";
+        $filePath = env('AWS_S3_BUCKET_FOLDER', 'assets01')."/videos/". $videoSubDirectory."/" . $video->id. $suffix. ".".$fileExt;
         $result = Storage::disk('s3')->put($filePath, file_get_contents($request->file));
         $path = Storage::disk('s3')->url($filePath);
         
@@ -366,6 +375,9 @@ class VideoController extends Controller
            $video->update([
                 'status' => self::VIDEO_STATUS_UPLOADED, // Encoding
                 'src_url' => $path
+           ], 200,
+           [
+               'Access-Control-Allow-Origin' =>'*'
            ]);
 
         }
@@ -373,6 +385,9 @@ class VideoController extends Controller
             "result" =>  $result,
             "src_path" =>  $path,
             "video_id" => $video->id
+        ], 200,
+        [
+            'Access-Control-Allow-Origin' =>'*'
         ]);
     }
     /**
@@ -412,8 +427,9 @@ class VideoController extends Controller
             $outputURL = $message->Outputs->HLS_GROUP[0];
             $tokens = explode("/", $outputURL);
             $outFolder = $tokens[3]."/".$tokens[4];
-            $uuid = explode(".", $tokens[6])[0];
-            $video = Video::where('uuid', $uuid)->first();
+            $filename = explode(".", $tokens[6])[0];
+            $uuid = str_replace("_drm", "", $filename);
+            $video = Video::find($uuid);
             if($video == null){
                 return response()->json([
                     "type" => "Error",
@@ -450,14 +466,37 @@ class VideoController extends Controller
             $thumbnailTokens[count($thumbnailTokens) - 2] = str_pad(intval($thumbnailCount / 2), 7, '0', STR_PAD_LEFT);
             $thumbnailUrl = implode(".", $thumbnailTokens);
 
+            if($video->drm_enabled){
+                $outputURL_DASHISO = $message->Outputs->DASH_ISO_GROUP[0];
+                $outputURL_APPLE = $message->Outputs->HLS_GROUP[0];
+                $outputUrl_DASHISO_tokens = explode("/", $outputURL_DASHISO);
+                $dest_url_DASHISO = implode("/", array_slice($outputUrl_DASHISO_tokens, 3));
+                $content = Storage::disk('s3-dest')->get($dest_url_DASHISO);
+                preg_match("/default_KID=\"([0-9a-z-]*)\"/", $content, $matched);
+                $kid = $matched[1];
+
+                $originPrefix = $globalGeoGroup->awsCloudfrontDistribution->domain_name."/".$video->geoGroup->awsCloudfrontDistribution->dist_id;
+                $outputURL = str_replace($originPrefix, $cdnDomainName, $outputURL_DASHISO);
+
+                $outputURLAPPLE = str_replace($originPrefix, $cdnDomainName, $outputURL_APPLE);
+                $outputURLDASH = str_replace($originPrefix, $cdnDomainName, $outputURL_DASHISO);
+             }
+            else{
+                $kid = null;
+                $outputURLAPPLE = null;
+                $outputURLDASH = null;
+            }
             //update video table with out result information
             $video->update([
                 'status' => self::VIDEO_STATUS_AVAILABLE,
                 'out_url' => $outputURL,
+                'out_url_apple' => $outputURLAPPLE,
+                'out_url_dash' => $outputURLDASH,
                 'out_folder' => $outFolder,
                 'out_folder_size' => $sizeData["statusCode"] == 200 ? $sizeData["data"]["size"] : 0,
                 'thumbnail' => $thumbnailUrl,
-                'thumbnail_count' => $thumbnailCount
+                'thumbnail_count' => $thumbnailCount,
+                'drm_keyid' => $kid
             ]);
 
             return response()->json([
@@ -846,13 +885,100 @@ class VideoController extends Controller
         }
     }
 
-    public function getPlaybackUrl(Video $video)
+    public function getPlaybackUrl(Request $request, Video $video)
     {
-        if($video->isPublished() && !$video->isExpired()){
-            return $video->out_url;
+        if($video->status == self::VIDEO_STATUS_AVAILABLE){
+            if($video->isPublished() && !$video->isExpired()){
+                if($video->drm_enabled){
+                    $outUrl = $video->out_url;
+                    if($request->browser == "chrome"){
+                        $outUrl = $video->out_url_dash;
+                    }
+                    else if($request->browser == "safari"){
+                        $outUrl = $video->out_url_apple;
+                    }
+                    $validFrom = date(DATE_ATOM, strtotime("yesterday"));
+                    $validTo = date(DATE_ATOM, strtotime("tomorrow"));
+                    $message = [
+                        "type" => "entitlement_message",
+                        "version" => 2,
+                        "license" => [
+                            "start_datetime" => $validFrom,
+                            "expiration_datetime" => $validTo,
+                            "allow_persistence" => true
+                        ],
+        
+                        "content_keys_source" => [
+                            "inline" => [
+                                [
+                                    "id" => $video->drm_keyid,
+                                    "usage_policy" => "Policy A"		
+                                ] 
+                            ]
+                        ],
+        
+                        // NOTE: This is for global
+                        // The keys list will be filled separately by the next code block.
+                        // "content_keys_source" => [
+                        //     "license_request" => [
+                        //       "seed_id" => env('AXINOM_KEY_SEED_ID'),
+                        //       "usage_policy" => "Policy A"
+                        //     ]
+                        // ],
+                        
+                        // License configuration should be as permissive as possible for the scope of this guide.
+                        // For this reason, some PlayReady-specific restrictions are relaxed below.
+                        // There is no need to relax the default Widevine or FairPlay specific restrictions.
+                        "content_key_usage_policies" => [
+                            [
+                                "name" => "Policy A"
+                            ]
+                        ]
+                    ];
+        
+                    $envelope = [
+                        "version" => 1,
+                        "com_key_id" => env('AXINOM_COM_KEY_ID'),
+                        "message" => $message,
+                        "begin_date" => $validFrom,
+                        "expiration_date" => $validTo
+                    ];
+                    $key = base64_decode(env('AXINOM_COM_KEY'));
+                    $licenseToken = \Firebase\JWT\JWT::encode($envelope, $key, 'HS256');
+                    return response()->json(
+                        [
+                            "url" => $outUrl,
+                            "licenseToken" => $licenseToken
+                        ], 200,
+                        [
+                            'Access-Control-Allow-Origin' =>'*'
+                        ]
+                    );
+                }
+                else{
+                    return response()->json(
+                        [
+                            "url" => $video->out_url
+                        ]
+                    );
+                }
+            }
+            else{
+                return response()->json(
+                    [
+                        "message"=>"expired"
+                    ]
+                );
+            }
         }
-        else
-            return "expired";
+        else{
+            return response()->json(
+                [
+                    "message"=>"video is not ready."
+                ]
+            );
+        }
+        
     }
     public function getThumbnailsList(Video $video)
     {
@@ -933,14 +1059,13 @@ class VideoController extends Controller
     {
 
         //Test
-        $data = [
-            'id'=> \Ramsey\Uuid\Uuid::uuid4()->toString(),
-        'country_id' => '6671ccb8-2634-47b6-bc55-4d2d6f7b9585',
-        'geo_group_id' => 'cbe86e77-e45e-4b8f-9bcf-05c1f3ae8491'
-            ];   
-
-        CountryGeoGroupMap::insert($data);
-        return response()->json(["result"=> "success"]);
+        $dest_url = "EY6CESNM58DSQ/a9fc8797-e6d2-4337-a4e2-e7ccd8bf895d/DASHISO1/ac5c6969-38d8-4f6e-bbfe-410f3acc1347_drm.mpd";
+        $content = Storage::disk('s3-dest')->get($dest_url);
+        preg_match("/default_KID=\"([0-9a-z-]*)\"/", $content, $matched);
+        $kid = $matched[1];
+        return response()->json([
+            'message' => $kid
+        ]);
     }
 
 }

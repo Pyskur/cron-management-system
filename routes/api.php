@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\UsersNotificationsController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VideoPlayerController;
 use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\MoneyController;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
 
@@ -91,6 +92,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_THUMBNAILS]);
         Route::get('videos/by-path', [VideoController::class, 'getVideosByPath'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_BYPATH]);
         Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
+        
+        Route::get('money/exchange', [MoneyController::class, 'exchange']);
 
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);
@@ -108,6 +111,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('orders', OrderController::class);
         Route::apiResource('countries', CountryController::class);
         Route::apiResource('sms', SmsController::class);
+        Route::apiResource('money', MoneyController::class);
         Route::apiResource('videos', VideoController::class)->except([
             'store'
         ]);

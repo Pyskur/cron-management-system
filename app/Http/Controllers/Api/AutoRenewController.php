@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\AutoRenew;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+
 class AutoRenewController extends Controller
 {
     /**

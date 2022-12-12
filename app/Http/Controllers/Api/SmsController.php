@@ -12,6 +12,7 @@ use App\Http\Controllers\Jobs\LeadSendmailJob;
 use App\Http\Controllers\Jobs\VerificationSendMailJob;
 use Illuminate\Support\Facades\Mail;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class SmsController extends Controller
 {

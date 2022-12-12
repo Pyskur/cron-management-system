@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UsersApiHistories;
 use Illuminate\Http\Request;
 use Validator;
+use Illuminate\Support\Facades\Auth;
 
 class UsersApiHistoriesController extends Controller
 {

@@ -8,6 +8,7 @@ use App\Models\HttpSetting;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class HttpSettingController extends Controller
 {

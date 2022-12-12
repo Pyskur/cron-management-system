@@ -9,6 +9,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {

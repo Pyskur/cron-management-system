@@ -10,6 +10,8 @@ use App\Models\UsersCompanies;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
+
 class CompanyController extends Controller
 {
     /**

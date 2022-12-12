@@ -12,6 +12,7 @@ use App\Http\Controllers\Jobs\LeadSendmailJob;
 use App\Http\Controllers\Jobs\VerificationSendMailJob;
 use Illuminate\Support\Facades\Mail;
 use App\Permissions\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class SmsController extends Controller
 {
@@ -205,6 +206,23 @@ class SmsController extends Controller
         }
 
         return $code;
+    }
+
+    public function sendUserPasscodeMessage_core($data)
+    {
+        try
+        {
+            $userid = $data['user_id'];
+            $passcode = $data['passcode'];
+            $expired = $data['expired_at'];
+            $userinfo = User::where('id', $userid)->first();
+            $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
+            return 0;
+        }
+        catch (\Exception $e)
+        {
+            return $e;
+        }
     }
 
     public function sendUserVerificationMessage(Request $request)

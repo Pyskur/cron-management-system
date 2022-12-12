@@ -431,24 +431,39 @@ Artisan::command('db:setup', function () {
 
         //DynamoDB
         $dynamodbClient = \AWS::createClient('DynamoDB');
-        $history_table = $dynamodbClient->describeTable(array(
-            'TableName' => 'users_api_histories'
-        ));
+        $table_name = 'users_api_histories';
+        $tables = $dynamodbClient->listTables();
 
-        if (!$history_table) {
+        if(in_array($table_name, $tables['TableNames']))
+        {
+            $this->comment("--There is already DynamoDB user_api_histories table");
+        } else {
             try {
-                $tableName = 'users_api_histories';
                 $dynamodbClient->createTable([
-                    'TableName' => $tableName,
+                    'TableName' => $table_name,
+                    'AttributeDefinitions' => [
+                        [
+                            'AttributeName' => 'id',
+                            'AttributeType' => 'S'
+                        ],
+                    ],
+                    'KeySchema' => [
+                        [
+                            'AttributeName' => 'id',
+                            'KeyType'       => 'HASH'
+                        ],
+                    ],
+                    'ProvisionedThroughput' => [
+                        'ReadCapacityUnits'  => 10,
+                        'WriteCapacityUnits' => 20,
+                    ],
                 ]);
-            } catch (AwsException $e) {
+            } catch (AwsException $e) { 
                 return [
                     'Error' => 'Error: ' . $e->getAwsErrorMessage()
                 ];
             }    
             $this->info("--DynamoDB Done");
-        } else {
-            $this->comment("--There is already DynamoDB user_api_histories table");
         }
 
         //Add Billings

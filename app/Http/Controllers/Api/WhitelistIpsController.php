@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\WhitelistIps;
 use Illuminate\Http\Request;
 use Validator;
+use Illuminate\Support\Facades\Auth;
 
 class WhitelistIpsController extends Controller
 {

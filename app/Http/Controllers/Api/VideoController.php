@@ -375,9 +375,6 @@ class VideoController extends Controller
            $video->update([
                 'status' => self::VIDEO_STATUS_UPLOADED, // Encoding
                 'src_url' => $path
-           ], 200,
-           [
-               'Access-Control-Allow-Origin' =>'*'
            ]);
 
         }

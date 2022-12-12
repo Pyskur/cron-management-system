@@ -121,7 +121,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 Route::post('videos/test-noauth', [VideoController::class, 'test']);
-
 Route::get('/test', [BillingController::class, 'bandwidth']);
     
 Route::prefix('auth')->group(function () {

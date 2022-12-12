@@ -293,7 +293,8 @@ class VideoController extends Controller
                 "message"=> $validator->errors()
             ], 200,
             [
-                'Access-Control-Allow-Origin' =>'*'
+                'Access-Control-Allow-Origin' =>'*',
+                'Access-Control-Allow-Methods' => '*'
             ]);
         }
 
@@ -341,7 +342,8 @@ class VideoController extends Controller
                 "message" => "Cannot upload video. Geo Retriction is no valid."
             ], 200,
             [
-                'Access-Control-Allow-Origin' =>'*'
+                'Access-Control-Allow-Origin' =>'*',
+                'Access-Control-Allow-Methods' => '*'
             ]);
         }
 
@@ -384,7 +386,8 @@ class VideoController extends Controller
             "video_id" => $video->id
         ], 200,
         [
-            'Access-Control-Allow-Origin' =>'*'
+            'Access-Control-Allow-Origin' =>'*',
+            'Access-Control-Allow-Methods' => '*'
         ]);
     }
     /**

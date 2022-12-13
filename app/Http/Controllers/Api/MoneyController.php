@@ -194,4 +194,36 @@ class MoneyController extends Controller
 
         return response()->json($result);
     }
+
+    public function exchangeForUser(Request $request)
+    {
+        $user = Auth::user();
+        $userinfo = User::where('id', $user->id)->first();
+        $bal = json_decode($userinfo->balance, true);
+
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'from' => 'required',
+            'to' => 'required',
+            'amount' => 'required'
+        ]);
+
+        if(!isset($bal[$input['from']]) || $bar[$input['from']] < $input['amount'])
+        {
+            return response()->json([
+                "error" => "Exchange Error",
+                "code"=> 0,
+                "message"=> "Not enough money for ".$input['from']
+            ]);
+        }
+
+        $result = $this->exchange($input['from'], $input['to'], $input['amount']);
+
+        if(!isset($bal[$input['to']])) $bal[$input['to']] = 0;
+        $bal[$input['to']] += $result['result'];
+        $bal[$input['from']] -= $input['amount'];
+
+        $userinfo->update(['balance' => json_encode($bal)]);
+    }
 }

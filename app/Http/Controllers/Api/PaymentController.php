@@ -300,4 +300,53 @@ class PaymentController extends Controller
       }
       return response()->json($result);
     }
+
+    public function chargeFromToken(Request $request)
+    {
+      $user = Auth::user();
+      $userinfo = User::where('id', $user->id)->first();
+      $input = $request->all();
+
+      $validator = Validator::make($input, [
+          'number' => 'required|string',
+          'exp_month' => 'required|integer',
+          'exp_year' => 'required|integer',
+          'cvc' => 'required|string',
+          'amount' => 'required|integer',
+          'currency' => 'required|string',
+      ]);
+      
+      if($validator->fails()){
+          return response()->json([
+              "error" => "Validation Error",
+              "code"=> 0,
+              "message"=> $validator->errors()
+          ]);
+      }
+
+      $stripe = new \Stripe\StripeClient(env('STRIPE_KEY'));
+      $tokenResult = $stripe->tokens->create([
+        'card' => [
+          'number' => $input['number'],
+          'exp_month' => $input['exp_month'],
+          'exp_year' => $input['exp_year'],
+          'cvc' => $input['cvc'],
+          'customer' => $userinfo->stripe_cust_id
+        ],
+      ]);
+
+      $stripe->charges->create([
+        'amount' => $input['amount'],
+        'currency' => $input['currency'],
+        'source' => $tokenResult['id'],
+        'description' => $user->id.' '.$input['amount'].' '.$input['currency'],
+      ]);
+
+      $bal = json_decode($userinfo->balance, true);
+      if(!isset($bal[$input['currency']])) $bal[$input['currency']] = 0;
+      $bal[$input['currency']] += $input['amount'];
+
+      $userinfo->update(['balance' => json_encode($bal)]);
+      return response()->json([]);
+    }
 }

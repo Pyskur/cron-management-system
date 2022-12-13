@@ -81,6 +81,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_ADDPAYMENTMETHOD]);;
         Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE]);;
         Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS]);;
+        Route::post('payments/chargeFromToken', [PaymentController::class, 'chargeFromToken']);
         
         Route::post('sms/sendMessage', [SmsController::class, 'sendMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDMESSAGE]);;
         Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDUSERVERIFICATIONMESSAGE]);;

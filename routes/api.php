@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\UsersNotificationsController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VideoPlayerController;
 use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\MoneyController;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
 
@@ -78,8 +79,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_AUTO_RENEW_USER_PAYMENT]);;
         Route::get('payments/ipn', [PaymentController::class, 'ipn'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_IPN]);;
         Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_ADDPAYMENTMETHOD]);;
-        Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE]);;
-        Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS]);;
+        Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE]);;
+        Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS]);;
+        Route::post('payments/chargeFromToken', [PaymentController::class, 'chargeFromToken']);
         
         Route::post('sms/sendMessage', [SmsController::class, 'sendMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDMESSAGE]);;
         Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDUSERVERIFICATIONMESSAGE]);;
@@ -91,6 +93,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('videos/thumbnails/{video}', [VideoController::class, 'getThumbnailsList'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_THUMBNAILS]);
         Route::get('videos/by-path', [VideoController::class, 'getVideosByPath'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_BYPATH]);
         Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
+        
+        Route::post('money/exchange', [MoneyController::class, 'exchangeApi']);
 
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);
@@ -108,6 +112,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('orders', OrderController::class);
         Route::apiResource('countries', CountryController::class);
         Route::apiResource('sms', SmsController::class);
+        Route::apiResource('money', MoneyController::class);
         Route::apiResource('videos', VideoController::class)->except([
             'store'
         ]);

@@ -11,7 +11,6 @@ use Validator;
 use Illuminate\Support\Facades\Auth;
 use function Ramsey\Uuid\v1;
 use App\Permissions\Permission;
-use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {

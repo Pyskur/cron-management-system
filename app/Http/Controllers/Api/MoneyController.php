@@ -152,24 +152,46 @@ class MoneyController extends Controller
         return response()->json();
     }
 
-    public function exchange(Request $request)
+    public function exchange($from, $to, $amount)
     {
-        $client = new Client();
-        $res = $client->request('POST', 'https://api.apilayer.com/currency_data/convert', [
-            'form_params' => [
-                'from' => 'USD',
-                'to' => 'EUR',
-                'amount' => '5',
-                'date' => '2022-01-01',
-            ],
-            'headers' => [
-                'apikey' => 'rNh3nUyRaPsnhiX2x8ZKMR1Ij5CmNL8Q'
-            ]
+        $url = 'https://api.apilayer.com/currency_data/convert?from='.$from.'&to='.$to.'&amount='.$amount.'&date='.date('Y-m-d');
+        try {
+            $client = new Client();
+            $res = $client->request('GET', $url, [
+                'headers' => [
+                    'apikey' => 'rNh3nUyRaPsnhiX2x8ZKMR1Ij5CmNL8Q'
+                ]
+            ]);
+            return json_decode($res->getBody(), true);
+        } catch (\Exception $e) {
+            return [
+                "error" => "Error",
+                "code"=> 0,
+                "message"=> $e->getMessage()
+            ];
+        }
+    }
+
+    public function exchangeApi(Request $request)
+    {
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'from' => 'required',
+            'to' => 'required',
+            'amount' => 'required'
         ]);
-        echo $res->getStatusCode();
-        // 200
-        echo $res->getHeader('content-type');
-        // 'application/json; charset=utf8'
-        echo $res->getBody();
+
+        if($validator->fails()){
+            return response()->json([
+                "error" => "Validation Error",
+                "code"=> 0,
+                "message"=> $validator->errors()
+            ]);
+        }
+
+        $result = $this->exchange($input['from'], $input['to'], $input['amount']);
+
+        return response()->json($result);
     }
 }

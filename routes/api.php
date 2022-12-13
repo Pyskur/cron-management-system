@@ -79,8 +79,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('payments/auto_renew_user_payment/{id}', [PaymentController::class, 'auto_renew_user_payment'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_AUTO_RENEW_USER_PAYMENT]);;
         Route::get('payments/ipn', [PaymentController::class, 'ipn'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_IPN]);;
         Route::post('payments/addPaymentMethod', [PaymentController::class, 'addPaymentMethod'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_ADDPAYMENTMETHOD]);;
-        Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE]);;
-        Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS]);;
+        Route::post('payments/getMyStripeProfile', [PaymentController::class, 'getMyStripeProfile']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPROFILE]);;
+        Route::post('payments/getMyStripePaymentMethods', [PaymentController::class, 'getMyStripePaymentMethods']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_PAYMENT_GETMYSTRIPEPAYMENTMETHODS]);;
         
         Route::post('sms/sendMessage', [SmsController::class, 'sendMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDMESSAGE]);;
         Route::post('sms/sendUserVerificationMessage', [SmsController::class, 'sendUserVerificationMessage'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_SMS_SENDUSERVERIFICATIONMESSAGE]);;
@@ -93,7 +93,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('videos/by-path', [VideoController::class, 'getVideosByPath'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_VIDEO_BYPATH]);
         Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
         
-        Route::get('money/exchange', [MoneyController::class, 'exchange']);
+        Route::post('money/exchange', [MoneyController::class, 'exchangeApi']);
 
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);

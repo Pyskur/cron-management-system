@@ -117,6 +117,14 @@ class AuthController extends Controller
                 }
             }
 
+            if (!User::firstWhere('email', $request->email)->email_verified_at) {
+                return response()->json([
+                    "error" => "Verification Error",
+                    "code"=> 0,
+                    "message"=> "Email not verificated yet"
+                ], 400);
+            }
+
             $pintoken = new PinTokenController;
             $passcode = $pintoken->setPasscode(['user_email' => $request->email]);
 

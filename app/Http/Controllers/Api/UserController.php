@@ -91,6 +91,7 @@ class UserController extends Controller
                 'phone'=> $request->phone,
                 'language'=> $request->language,
                 'stripe_cust_id' => $customer_info->id,
+                'balance' => '{"GBP":50}',
             ];
 
             $user = User::create($newdata);

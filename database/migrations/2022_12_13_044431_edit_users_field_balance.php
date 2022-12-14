@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('users', function ($table) {
             $table->json('balance')->nullable()->change();
-            $table->json('balance')->nullable()->default('{"GBP":50}')->change();
+            // $table->json('balance')->nullable()->default('{"GBP":50}')->change();
         });
     }
 

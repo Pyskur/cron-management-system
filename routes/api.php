@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('videos/admin/by-path', [VideoController::class, 'getVideosByPathAdmin']);
         
         Route::post('money/exchange', [MoneyController::class, 'exchangeApi']);
+        Route::post('money/exchangeForUser', [MoneyController::class, 'exchangeForUser']);
 
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);

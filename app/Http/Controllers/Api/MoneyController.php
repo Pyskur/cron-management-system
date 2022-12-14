@@ -209,7 +209,7 @@ class MoneyController extends Controller
             'amount' => 'required'
         ]);
 
-        if(!isset($bal[$input['from']]) || $bar[$input['from']] < $input['amount'])
+        if(!isset($bal[$input['from']]) || $bal[$input['from']] < $input['amount'])
         {
             return response()->json([
                 "error" => "Exchange Error",
@@ -225,5 +225,7 @@ class MoneyController extends Controller
         $bal[$input['from']] -= $input['amount'];
 
         $userinfo->update(['balance' => json_encode($bal)]);
+
+        return response()->json([]);
     }
 }

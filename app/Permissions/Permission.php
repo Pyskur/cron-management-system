@@ -59,6 +59,18 @@ class Permission
     public const CAN_COUNTRY_SHOW = "country-show";
     public const CAN_COUNTRY_DESTROY = "country-destroy";
 
+    public const CAN_WHITELISTIPS_INDEX = "whitelistips-index";
+    public const CAN_WHITELISTIPS_STORE = "whitelistips-store";
+    public const CAN_WHITELISTIPS_UPDATE = "whitelistips-update";
+    public const CAN_WHITELISTIPS_SHOW = "whitelistips-show";
+    public const CAN_WHITELISTIPS_DESTROY = "whitelistips-destroy";
+
+    public const CAN_BLACKLISTIPS_INDEX = "blacklistips-index";
+    public const CAN_BLACKLISTIPS_STORE = "blacklistips-store";
+    public const CAN_BLACKLISTIPS_UPDATE = "blacklistips-update";
+    public const CAN_BLACKLISTIPS_SHOW = "blacklistips-show";
+    public const CAN_BLACKLISTIPS_DESTROY = "blacklistips-destroy";
+
     public const CAN_CRON_INDEX = "cron-index";
     public const CAN_CRON_STORE = "cron-store";
     public const CAN_CRON_UPDATE = "cron-update";

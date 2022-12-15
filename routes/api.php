@@ -32,6 +32,8 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VideoPlayerController;
 use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\MoneyController;
+use App\Http\Controllers\Api\BlacklistIpsController;
+use App\Http\Controllers\Api\WhitelistIpsController;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
 
@@ -106,6 +108,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('crons', CronController::class);
         Route::apiResource('auto_renew', AutoRenewController::class);
         Route::apiResource('companies', CompanyController::class);
+        Route::apiResource('blacklistips', BlacklistIpsController::class);
+        Route::apiResource('whitelistips', WhitelistIpsController::class);
         Route::apiResource('epds', EpdController::class);
         Route::apiResource('groups', GroupController::class);
         Route::apiResource('http_settings', HttpSettingController::class);

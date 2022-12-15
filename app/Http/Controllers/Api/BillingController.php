@@ -303,8 +303,13 @@ class BillingController extends Controller
                     $bal = floor($used_bytes / 1024 / 1024 / 1024 * $billtype->amount * 100) / 100;
                     $used_bytes = floor($used_bytes - $bal * 1024 * 1024 * 1024 / $billtype->amount);
 
-                    $user = User::firstWhere('id', $info->user_id);
-                    User::where('id', $info->user_id)->update(['balance' => $user->balance - $bal]);
+                    $userinfo = User::firstWhere('id', $info->user_id);
+                    $balance = json_decode($userinfo->balance, true);
+                    if(!isset($balance['GBP'])) $balance['GBP'] = 0;
+                    $balance['GBP'] -= $bal;
+
+                    $userinfo->update(['balance' => json_encode($balance)]);
+                    // User::where('id', $info->user_id)->update(['balance' => $user->balance - $bal]);
                 }
                 if($billdetail)
                 {

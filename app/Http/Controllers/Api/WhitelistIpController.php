@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
-use App\Models\WhitelistIps;
+use App\Models\WhitelistIp;
 use Illuminate\Http\Request;
 use Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
 
-class WhitelistIpsController extends Controller
+class WhitelistIpController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -22,7 +22,7 @@ class WhitelistIpsController extends Controller
         $user = Auth::user();
         
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_WHITELISTIPS_INDEX)) {
-            $whitelistIps = WhitelistIps::all();
+            $whitelistIps = WhitelistIp::all();
             return response()->json($whitelistIps);
         } else {
             return response()->json([
@@ -30,16 +30,6 @@ class WhitelistIpsController extends Controller
                 'message' => 'Not Authorized.'
             ]);
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -66,9 +56,17 @@ class WhitelistIpsController extends Controller
                 ]);
             }
 
+            if (WhitelistIp::firstWhere('ip_address', $input['ip_address'])) {
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> "Already Exist"
+                ]);
+            }
+
             try {
-                $whitelistIp = WhitelistIps::create($input);
-                return response()->json($blacklistIp);
+                $whitelistIp = WhitelistIp::create($input);
+                return response()->json($whitelistIp);
             } catch (\Exception $e) {
                 if (App::environment('local')) {
                     $message = $e->getMessage();
@@ -94,10 +92,10 @@ class WhitelistIpsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\WhitelistIps  $whitelistIp
+     * @param  \App\Models\WhitelistIp  $whitelistIp
      * @return \Illuminate\Http\Response
      */
-    public function show(WhitelistIps $whitelistIp)
+    public function show(WhitelistIp $whitelistIp)
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_WHITELISTIPS_SHOW)) {
@@ -117,7 +115,7 @@ class WhitelistIpsController extends Controller
     public function isAllowed($data)
     {
         $ip = $data['login_ip'];
-        $ranges = WhitelistIps::all();
+        $ranges = WhitelistIp::all();
 
         foreach ($ranges as $range) {
             if ($range->enabled) {
@@ -140,31 +138,20 @@ class WhitelistIpsController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\WhitelistIps  $whitelistIps
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(WhitelistIps $whitelistIps)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\WhitelistIps  $whitelistIp
+     * @param  \App\Models\WhitelistIp  $whitelistIp
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, WhitelistIps $whitelistIp)
+    public function update(Request $request, WhitelistIp $whitelistIp)
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_WHITELISTIPS_UPDATE)) {
             $input = $request->all();
 
             $validator = Validator::make($input, [
-                'name' => 'required|string',
+                'ip_address' => 'required|string',
             ]);
     
             if($validator->fails()){
@@ -175,6 +162,14 @@ class WhitelistIpsController extends Controller
                 ]);
             }
     
+            if (WhitelistIp::firstWhere('ip_address', $input['ip_address'])) {
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> "Already Exist"
+                ]);
+            }
+
             try {
                 $whitelistIp->update($input);
                 return response()->json($whitelistIp);
@@ -203,10 +198,10 @@ class WhitelistIpsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\WhitelistIps  $whitelistIp
+     * @param  \App\Models\WhitelistIp  $whitelistIp
      * @return \Illuminate\Http\Response
      */
-    public function destroy(WhitelistIps $whitelistIp)
+    public function destroy(WhitelistIp $whitelistIp)
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_WHITELISTIPS_DESTROY)) {

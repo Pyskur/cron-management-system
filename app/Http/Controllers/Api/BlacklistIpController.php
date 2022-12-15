@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use App\Models\BlacklistIps;
+use App\Models\BlacklistIp;
 use Illuminate\Http\Request;
 use Validator;
 use App\Permissions\Permission;
 
-class BlacklistIpsController extends Controller
+class BlacklistIpController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -21,7 +21,7 @@ class BlacklistIpsController extends Controller
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_INDEX)) {
-            $blacklistIps = BlacklistIps::all();
+            $blacklistIps = BlacklistIp::all();
             return response()->json($blacklistIps);
         } else {
             return response()->json([
@@ -29,16 +29,6 @@ class BlacklistIpsController extends Controller
                 'message' => 'Not Authorized.'
             ]);
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -65,8 +55,16 @@ class BlacklistIpsController extends Controller
                 ]);
             }
 
+            if (BlacklistIp::firstWhere('ip_address', $input['ip_address'])) {
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> "Already Exist"
+                ]);
+            }
+
             try {
-                $blacklistIp = BlacklistIps::create($input);
+                $blacklistIp = BlacklistIp::create($input);
                 return response()->json($blacklistIp);
             } catch (\Exception $e) {
                 if (App::environment('local')) {
@@ -93,10 +91,10 @@ class BlacklistIpsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\BlacklistIps  $blacklistIp
+     * @param  \App\Models\BlacklistIp  $blacklistIp
      * @return \Illuminate\Http\Response
      */
-    public function show(BlacklistIps $blacklistIp)
+    public function show(BlacklistIp $blacklistIp)
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_SHOW)) {
@@ -116,7 +114,7 @@ class BlacklistIpsController extends Controller
     public function isBlocked($data)
     {
         $ip = $data['login_ip'];
-        $ranges = BlacklistIps::all();
+        $ranges = BlacklistIp::all();
 
         foreach ($ranges as $range) {
             if ($range->enabled) {
@@ -139,31 +137,20 @@ class BlacklistIpsController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\BlacklistIps  $blacklistIps
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(BlacklistIps $blacklistIps)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\BlacklistIps  $blacklistIp
+     * @param  \App\Models\BlacklistIp  $blacklistIp
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, BlacklistIps $blacklistIp)
+    public function update(Request $request, BlacklistIp $blacklistIp)
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_UPDATE)) {
             $input = $request->all();
 
             $validator = Validator::make($input, [
-                'name' => 'required|string',
+                'ip_address' => 'required|string',
             ]);
     
             if($validator->fails()){
@@ -173,7 +160,15 @@ class BlacklistIpsController extends Controller
                     "message"=> $validator->errors()
                 ]);
             }
-    
+
+            if (BlacklistIp::firstWhere('ip_address', $input['ip_address'])) {
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> "Already Exist"
+                ]);
+            }
+
             try {
                 $blacklistIp->update($input);
                 return response()->json($blacklistIp);
@@ -202,10 +197,10 @@ class BlacklistIpsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\BlacklistIps  $blacklistIp
+     * @param  \App\Models\BlacklistIp  $blacklistIp
      * @return \Illuminate\Http\Response
      */
-    public function destroy(BlacklistIps $blacklistIp)
+    public function destroy(BlacklistIp $blacklistIp)
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_DESTROY)) {

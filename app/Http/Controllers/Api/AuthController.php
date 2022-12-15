@@ -100,7 +100,7 @@ class AuthController extends Controller
             $configure = new ConfigureController;
             $whitelistenabled = $configure->isEnabled(['name' => 'whitelistip']);
             if ($whitelistenabled) {
-                $whitelistips = new WhitelistIpsController;
+                $whitelistips = new WhitelistIpController;
                 if (!$whitelistips->isAllowed(['login_ip' => $user_ip])) {
                     return response()->json([
                         'code' => false,
@@ -108,7 +108,7 @@ class AuthController extends Controller
                     ], 400);
                 }
             } else {
-                $blacklistips = new BlacklistIpsController;
+                $blacklistips = new BlacklistIpController;
                 if ($blacklistips->isBlocked(['login_ip' => $user_ip])) {
                     return response()->json([
                         'code' => false,

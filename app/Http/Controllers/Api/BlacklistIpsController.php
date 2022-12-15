@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BlacklistIps;
 use Illuminate\Http\Request;
 use Validator;
+use App\Permissions\Permission;
 
 class BlacklistIpsController extends Controller
 {
@@ -18,7 +19,16 @@ class BlacklistIpsController extends Controller
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_INDEX)) {
+            $blacklistIps = BlacklistIps::all();
+            return response()->json($blacklistIps);
+        } else {
+            return response()->json([
+                'error' => 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -39,18 +49,65 @@ class BlacklistIpsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_STORE)) {
+            $input = $request->all();
+
+            $validator = Validator::make($input, [
+                'ip_address' => 'required|string',
+            ]);
+            
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+
+            try {
+                $blacklistIp = BlacklistIps::create($input);
+                return response()->json($blacklistIp);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "BlacklistIp store error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\BlacklistIps  $blacklistIps
+     * @param  \App\Models\BlacklistIps  $blacklistIp
      * @return \Illuminate\Http\Response
      */
-    public function show(BlacklistIps $blacklistIps)
+    public function show(BlacklistIps $blacklistIp)
     {
-        //
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_SHOW)) {
+            return response()->json($blacklistIp);
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
@@ -96,22 +153,70 @@ class BlacklistIpsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\BlacklistIps  $blacklistIps
+     * @param  \App\Models\BlacklistIps  $blacklistIp
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, BlacklistIps $blacklistIps)
+    public function update(Request $request, BlacklistIps $blacklistIp)
     {
-        //
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_UPDATE)) {
+            $input = $request->all();
+
+            $validator = Validator::make($input, [
+                'name' => 'required|string',
+            ]);
+    
+            if($validator->fails()){
+                return response()->json([
+                    "error" => "Validation Error",
+                    "code"=> 0,
+                    "message"=> $validator->errors()
+                ]);
+            }
+    
+            try {
+                $blacklistIp->update($input);
+                return response()->json($blacklistIp);
+            } catch (\Exception $e) {
+                if (App::environment('local')) {
+                    $message = $e->getMessage();
+                }
+                else{
+                    $message = "BlacklistIp update error";
+                }
+                return response()->json([
+                    "error" => "Error",
+                    "code"=> 0,
+                    "message"=> $message
+                ]);
+            }
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\BlacklistIps  $blacklistIps
+     * @param  \App\Models\BlacklistIps  $blacklistIp
      * @return \Illuminate\Http\Response
      */
-    public function destroy(BlacklistIps $blacklistIps)
+    public function destroy(BlacklistIps $blacklistIp)
     {
-        //
+        $user = Auth::user();
+        if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_BLACKLISTIPS_DESTROY)) {
+            $blacklistIp->delete();
+            return response()->json();
+        }
+        else{
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Not Authorized.'
+            ]);
+        }
     }
 }

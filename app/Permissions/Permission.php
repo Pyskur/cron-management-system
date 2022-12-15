@@ -29,6 +29,7 @@ class Permission
     public const CAN_USER_UPDATE_BALANCE = "user-update-balance";
     public const CAN_USER_GET_COMPANIES = "user-get-companies";
     public const CAN_USER_GET_GROUPS = "user-get-groups";
+    public const CAN_USER_GET_BALANCE = "user-get-balance";
 
     public const CAN_AUTORENEW_INDEX = "autorenew-index";
     public const CAN_AUTORENEW_STORE = "autorenew-store";

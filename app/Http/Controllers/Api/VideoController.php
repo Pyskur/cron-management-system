@@ -343,6 +343,10 @@ class VideoController extends Controller
         //insert video table
         $path = $request->path != null ? $request->path : "/";
         $drm_enabled = $request->drm_enabled == null ? 0 : ($request->drm_enabled == 1 || $request->drm_enabled == "1" || $request->drm_enabled == true ? 1 : 0);
+        $getID3 = new \getID3;
+        $file = $getID3->analyze($request->file);
+        $videoLength =  intval($file['playtime_seconds']);
+        
         $newVideo = [
             'title' => $request->title,
             'path' => $path,
@@ -354,7 +358,8 @@ class VideoController extends Controller
             'geo_group_id' => $geoGroupID,
             'publish_date'=> $request->publish_date,
             'unpublish_date'=> $request->unpublish_date,
-            'drm_enabled' => $drm_enabled
+            'drm_enabled' => $drm_enabled,
+            'length' => $videoLength
         ];
         $video = Video::create($newVideo);
 
@@ -1043,8 +1048,13 @@ class VideoController extends Controller
     
     public function test(Request $request)
     {
+        $getID3 = new \getID3;
+        $file = $getID3->analyze($request->file);
+        $duration = $file['playtime_seconds'];
+
         return response()->json([
-            'message' => 'success'
+            'message' => 'success',
+            'duration' =>$duration
         ]);
     }
 

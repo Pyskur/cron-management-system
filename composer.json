@@ -12,6 +12,7 @@
         "firebase/php-jwt": "^6.3",
         "goldspecdigital/laravel-eloquent-uuid": "9.0",
         "guzzlehttp/guzzle": "^7.5",
+        "james-heinrich/getid3": "^1.9",
         "laravel/cashier": "^14.2",
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.0",

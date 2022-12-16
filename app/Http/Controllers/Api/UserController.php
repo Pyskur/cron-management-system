@@ -319,5 +319,31 @@ class UserController extends Controller
     {
         return response()->json($user->groups);
     }
-    
+
+    public function getBalanceBySymbol(User $user, Request $request)
+    {
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'symbol' => 'required|string|size:3',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "error" => "Validation Error",
+                "code" => 0,
+                "message" => $validator->errors()
+            ]);
+        }
+
+        $symbol = $request->symbol;
+        $balanceBySymbol = 0;
+        $userBalance = json_decode($user->balance, true);
+        if (isset($userBalance[$symbol])) {
+            $balanceBySymbol = $userBalance[$symbol];
+        }
+
+        return response()->json([
+            $symbol => $balanceBySymbol,
+        ]);
+    }
 }

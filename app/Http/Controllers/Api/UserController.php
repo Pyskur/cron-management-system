@@ -276,14 +276,15 @@ class UserController extends Controller
             "user_id" => $user->id
         ]); */
 
-        $newdata = [];
-        $newdata['balance'] = $user->balance - $balance * $size;
-
-        $user->update($newdata);
-
-        if ($newdata['balance'] < 0) {
+        $newBalance = $user->balance - $balance * $size;
+        if ($newBalance < 0) {
             return false;
         }
+
+        $newdata = [];
+        $newdata['balance'] = $newBalance;
+
+        $user->update($newdata);
 
         return true;
     }

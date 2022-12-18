@@ -21,6 +21,12 @@ class Permission
     public const CAN_VIDEOPLAYER_SHOW = "videoplayer-show";
     public const CAN_VIDEOPLAYER_DESTROY = "videoplayer-destroy";
 
+    public const CAN_CONFIGURE_INDEX = "configure-index";
+    public const CAN_CONFIGURE_STORE = "configure-store";
+    public const CAN_CONFIGURE_UPDATE = "configure-update";
+    public const CAN_CONFIGURE_SHOW = "configure-show";
+    public const CAN_CONFIGURE_DESTROY = "configure-destroy";
+
     public const CAN_USER_INDEX = "user-index";
     public const CAN_USER_STORE = "user-store";
     public const CAN_USER_UPDATE = "user-update";

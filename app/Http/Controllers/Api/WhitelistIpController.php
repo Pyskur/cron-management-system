@@ -161,14 +161,6 @@ class WhitelistIpController extends Controller
                     "message"=> $validator->errors()
                 ]);
             }
-    
-            if (WhitelistIp::firstWhere('ip_address', $input['ip_address'])) {
-                return response()->json([
-                    "error" => "Error",
-                    "code"=> 0,
-                    "message"=> "Already Exist"
-                ]);
-            }
 
             try {
                 $whitelistIp->update($input);

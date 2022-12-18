@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\MoneyController;
 use App\Http\Controllers\Api\BlacklistIpController;
 use App\Http\Controllers\Api\WhitelistIpController;
+use App\Http\Controllers\Api\ConfigureController;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
 
@@ -102,6 +103,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);
+        Route::apiResource('configures', ConfigureController::class);
         Route::apiResource('keys', KeyController::class);
         Route::apiResource('keys_codes', KeysCodeController::class);
         Route::apiResource('keys_refs', KeysRefController::class);

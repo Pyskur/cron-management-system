@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Permissions\Permission;
 use Illuminate\Support\Facades\Auth;
+use LaravelDaily\Invoices\Invoice;
+use LaravelDaily\Invoices\Classes\Buyer;
+use LaravelDaily\Invoices\Classes\InvoiceItem;
 
 class ReportController extends Controller
 {
@@ -119,5 +122,26 @@ class ReportController extends Controller
                 }
             }
         }
+    }
+
+    public function generate_invoice()
+    {
+        $customer = new Buyer([
+            'name'          => 'Kasper Leiber',
+            'custom_fields' => [
+                'email' => 'nini_ampreger@outlook.com',
+            ],
+        ]);
+
+        $item = (new InvoiceItem())->title('Service 1')->pricePerUnit(2);
+
+        $invoice = Invoice::make()
+            ->buyer($customer)
+            ->discountByPercent(10)
+            ->taxRate(15)
+            ->shipping(1.99)
+            ->addItem($item);
+
+        return $invoice->stream();
     }
 }

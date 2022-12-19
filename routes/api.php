@@ -60,6 +60,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('report/daily_report', [ReportController::class, 'daily_report'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_DAILY_REPORT]);;
         Route::get('report/monthly_report', [ReportController::class, 'monthly_report'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_Monthly_REPORT]);;
         Route::get('report/weekly_report', [ReportController::class, 'weekly_report'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_Weekly_REPORT]);;
+        Route::get('report/generate_invoice', [ReportController::class, 'generate_invoice']);//->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_REPORT_Generate_Invoice]);;
         
         Route::get('users/{user}/companies', [UserController::class, 'getCompanies'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_COMPANIES]);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_GROUPS]);

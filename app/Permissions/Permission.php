@@ -163,6 +163,7 @@ class Permission
     public const CAN_REPORT_DAILY_REPORT = "report-daily-report";
     public const CAN_REPORT_Monthly_REPORT = "report-monthly-report";
     public const CAN_REPORT_Weekly_REPORT = "report-weekly-report";
+    public const CAN_REPORT_Generate_Invoice = "report-generate-invoice";
 
     public const CAN_RESETPASSWORD_INVOKE = "resetpassword-invoke";
     public const CAN_USERNOTIFICATIONS_GETNOTIFICATIONS = "usersnotifications-getnotifications";

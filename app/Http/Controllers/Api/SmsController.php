@@ -240,14 +240,32 @@ class SmsController extends Controller
     {
         try
         {
-            $userid = $data['user_id'];
-            $ucode = $this->generateUniqueCode();
-            $expired = time() + 5 * 60;
-            User::where('id', $userid)->update(['verification_code' => $ucode]);
-            User::where('id', $userid)->update(['verification_code_expiry' => $expired]);
-            $userinfo = User::where('id', $userid)->first();
-            $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
-            return 0;
+            $user_email = $data['user_email'];
+            $userinfo = User::where('email', $user_email)->first();
+            if ($userinfo) {
+                if ($userinfo->email_verified_at) {
+                    return response()->json([
+                        'code' => false,
+                        'message' => 'Already Verified',
+                    ], 400);
+                } else {
+                    $ucode = $this->generateUniqueCode();
+                    $expired = time() + 5 * 60;
+                    User::where('email', $user_email)->update(['verification_code' => $ucode]);
+                    User::where('email', $user_email)->update(['verification_code_expiry' => $expired]);
+                    $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
+                    return response()->json([
+                        'user_email' => $userinfo->email,
+                        'verification_code' => $ucode,
+                        'verification_code_expiry' => $expired, 
+                    ], 200); 
+                }
+            } else {
+                return response()->json([
+                    'code' => false,
+                    'message' => 'Unregistered User',
+                ], 400);
+            }
         }
         catch (\Exception $e)
         {

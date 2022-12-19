@@ -140,7 +140,8 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::get('login_required', [AuthController::class, 'login_required'])->name('login');
-    Route::post('email_verification', [AuthController::class, 'email_verification']);
+    Route::post('send/verify', [AuthController::class, 'sendVerifyEmail']);
+    Route::post('verify/email', [AuthController::class, 'email_verification']);
 	Route::post('token', [AuthController::class, 'loginWithApiKey']);
     Route::post('passcode', [AuthController::class, 'verifyWithPasscode']);
     Route::post('password/email', ForgotPasswordController::class);

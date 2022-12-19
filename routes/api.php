@@ -65,6 +65,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('users/{user}/companies', [UserController::class, 'getCompanies'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_COMPANIES]);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_GROUPS]);
         Route::get('users/{user}/balanceBySymbol', [UserController::class, 'getBalanceBySymbol'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_BALANCE]);
+        Route::post('users/{user}/setBalanceBySymbol', [UserController::class, 'setBalanceBySymbol'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_SET_BALANCE]);
 
         Route::get('companies/{company}/users', [CompanyController::class, 'getUsers'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_GET_USERS]);
         Route::post('companies/add-user', [CompanyController::class, 'addUsertoCompany'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_ADD_USER]);

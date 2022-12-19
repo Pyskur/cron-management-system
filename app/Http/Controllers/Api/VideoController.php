@@ -237,9 +237,12 @@ class VideoController extends Controller
                 //delete dest s3 bucket output folder
                 $s3Url = $video->out_folder;
                 $results3dest = false;
-                if(Storage::disk('s3-dest')->exists($s3Url)) {
-                    $results3dest = Storage::disk('s3-dest')->deleteDirectory($s3Url);
+                if($s3Url != null){
+                    if(Storage::disk('s3-dest')->exists($s3Url)) {
+                        $results3dest = Storage::disk('s3-dest')->deleteDirectory($s3Url);
+                    }
                 }
+
 
                 //delete table
                 $video->delete();

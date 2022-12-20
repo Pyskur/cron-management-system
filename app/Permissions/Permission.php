@@ -36,6 +36,7 @@ class Permission
     public const CAN_USER_GET_COMPANIES = "user-get-companies";
     public const CAN_USER_GET_GROUPS = "user-get-groups";
     public const CAN_USER_GET_BALANCE = "user-get-balance";
+    public const CAN_USER_SET_BALANCE = "user-set-balance";
 
     public const CAN_AUTORENEW_INDEX = "autorenew-index";
     public const CAN_AUTORENEW_STORE = "autorenew-store";

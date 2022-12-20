@@ -216,8 +216,19 @@ class SmsController extends Controller
             $passcode = $data['passcode'];
             $expired = $data['expired_at'];
             $userinfo = User::where('id', $userid)->first();
-            $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
-            return 0;
+
+            $user = new UserController;
+            $isSuccess = $user->updateBalance($userinfo->email, 'otp');
+            if ($isSuccess) {
+                $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
+                return 0;
+            } else {
+                return response()->json([
+                    'error' => 'Send Passcode Message Error.',
+                    'code' => false,
+                    'message' => 'User balance is not enough.',
+                ], 400);
+            }
         }
         catch (\Exception $e)
         {
@@ -240,14 +251,43 @@ class SmsController extends Controller
     {
         try
         {
-            $userid = $data['user_id'];
-            $ucode = $this->generateUniqueCode();
-            $expired = time() + 5 * 60;
-            User::where('id', $userid)->update(['verification_code' => $ucode]);
-            User::where('id', $userid)->update(['verification_code_expiry' => $expired]);
-            $userinfo = User::where('id', $userid)->first();
-            $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
-            return 0;
+            $user_email = $data['user_email'];
+            $userinfo = User::where('email', $user_email)->first();
+            if ($userinfo) {
+                if ($userinfo->email_verified_at) {
+                    return response()->json([
+                        'code' => false,
+                        'message' => 'Already Verified',
+                    ], 400);
+                } else {
+                    $ucode = $this->generateUniqueCode();
+                    $expired = time() + 5 * 60;
+                    User::where('email', $user_email)->update(['verification_code' => $ucode]);
+                    User::where('email', $user_email)->update(['verification_code_expiry' => $expired]);
+
+                    $user = new UserController;
+                    $isSuccess = $user->updateBalance($user_email, 'otp');
+                    if ($isSuccess) {
+                        $this->dispatch(new VerificationSendMailJob(array('email' => $userinfo->email, 'name' => $userinfo->name, 'verification_code' => $ucode, 'verification_code_expiry' => $expired)));
+                        return response()->json([
+                            'user_email' => $userinfo->email,
+                            'verification_code' => $ucode,
+                            'verification_code_expiry' => $expired,
+                        ], 200); 
+                    } else {
+                        return response()->json([
+                            'error' => 'Send Verification Message Error.',
+                            'code' => false,
+                            'message' => 'User balance is not enough.',
+                        ], 400);
+                    }
+                }
+            } else {
+                return response()->json([
+                    'code' => false,
+                    'message' => 'Unregistered User',
+                ], 400);
+            }
         }
         catch (\Exception $e)
         {
@@ -260,8 +300,19 @@ class SmsController extends Controller
         try
         {
             $data=$request->all();
-            $this->dispatch(new LeadSendmailJob($data));
-            return response()->json(['status'=>'true']);
+            $user = new UserController;
+            $isSuccess = $user->updateBalance('daniellihm03@gmail.com', 'otp');
+
+            if ($isSuccess) {
+                $this->dispatch(new LeadSendmailJob($data));
+                return response()->json(['status'=>'true']);    
+            } else {
+                return response()->json([
+                    'error' => 'Send Lead Mail Error',
+                    'code' => false,
+                    'message' => 'User balance is not enough',
+                ]);
+            }
         }
         catch (\Exception $e)
         {

@@ -35,11 +35,6 @@ class LeadSendmailJob implements ShouldQueue
      */
     public function handle()
     {
-      $user = new UserController;
-      $isSuccess = $user->updateBalance('daniellihm03@gmail.com', 'otp');
-
-      if ($isSuccess) {
-        Mail::to('daniellihm03@gmail.com')->queue(new LeadMail($this->data));
-      }
+      Mail::to('daniellihm03@gmail.com')->queue(new LeadMail($this->data));
     }
 }

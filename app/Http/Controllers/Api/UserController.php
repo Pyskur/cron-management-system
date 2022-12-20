@@ -276,15 +276,13 @@ class UserController extends Controller
             "user_id" => $user->id
         ]); */
 
-        $newBalance = $user->balance - $balance * $size;
+        $userBalance = $this->getBalanceBySymbol($user, new Request(['symbol' => 'GBP']));
+        $newBalance = floatval($userBalance) - $balance * $size;
         if ($newBalance < 0) {
             return false;
         }
-
-        $newdata = [];
-        $newdata['balance'] = $newBalance;
-
-        $user->update($newdata);
+        
+        $this->setBalanceBySymbol($user, new Request(['symbol' => 'GBP', 'amount' => $newBalance]));
 
         return true;
     }
@@ -343,8 +341,39 @@ class UserController extends Controller
             $balanceBySymbol = $userBalance[$symbol];
         }
 
-        return response()->json([
-            $symbol => $balanceBySymbol,
+        return $balanceBySymbol;
+    }
+
+    public function setBalanceBySymbol(User $user, Request $request)
+    {
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'symbol' => 'required|string|size:3',
+            'amount' => 'required|numeric|between:0,99999.99',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "error" => "Validation Error",
+                "code" => 0,
+                "message" => $validator->errors()
+            ]);
+        }
+
+        $symbol = $request->symbol;
+        $amount = $request->amount;
+        $userBalance = json_decode($user->balance, true);
+        if (isset($userBalance[$symbol])) {
+            $userBalance[$symbol] = floatval($amount);
+        } else {
+            $newBalance = [$symbol => floatval($amount)];
+            $userBalance = array_merge($userBalance, $newBalance);
+        }
+
+        $newdata = [];
+        $newdata['balance'] = $userBalance;
+        $user->update($newdata);
+
+        return response()->json($user->balance);
     }
 }

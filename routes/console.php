@@ -53,6 +53,7 @@ Artisan::command('db:setup', function () {
             "user-get-companies",
             "user-get-groups",
             "user-get-balance",
+            "user-set-balance",
             "autorenew-store",
             "autorenew-update",
             "autorenew-show",

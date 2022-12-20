@@ -139,6 +139,27 @@ class AuthController extends Controller
         }
     }
 
+    public function sendVerifyEmail(Request $request)
+    {
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'user_email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => false,
+                'message' => 'Invalid Inputs',
+                'error' => $validator->errors()
+            ], 402);
+        }
+
+        $sms = new SmsController;
+        $result = $sms->sendUserVerificationMessage_core(['user_email' => $request->user_email]);
+
+        return $result;
+    }
+
     public function verfiyWithPasscode(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -232,7 +253,7 @@ class AuthController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'user_id' => 'required|uuid',
+            'user_email' => 'required|email',
             'verification_code' => 'required|string|min:6|max:6',
         ]);
         
@@ -244,16 +265,24 @@ class AuthController extends Controller
             ]);
         }
 
-        $user_id = $input['user_id'];
+        $user_email = $input['user_email'];
         $ucode = $input['verification_code'];
 
-        $userinfo = User::where('id', $user_id)->first();
+        $userinfo = User::where('email', $user_email)->first();
         if(!$userinfo)
         {
             return response()->json([
                 'code' => false,
                 'error' => 'Failed to verify',
                 'message' => 'User not found',
+            ]);
+        }
+        if($userinfo->email_verified_at)
+        {
+            return response()->json([
+                'code' => false,
+                'error' => 'Failed to verify',
+                'message' => 'Already Verified',
             ]);
         }
         if($userinfo->verification_code !== $ucode)
@@ -272,6 +301,8 @@ class AuthController extends Controller
                 'message' => 'Verification code expired',
             ]);
         }
+
+        User::where('email', $user_email)->update(['email_verified_at' => date('Y-m-d H:i:s')]);
         return response()->json($userinfo);
     }
 

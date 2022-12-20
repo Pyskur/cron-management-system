@@ -34,7 +34,7 @@ class VideoController extends Controller
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_VIDEO_INDEX)) {
-            $videos = Video::all();
+            $videos = Video::all()->orderBy("created_at");
             return response()->json($videos);
         }
         else{
@@ -1023,9 +1023,9 @@ class VideoController extends Controller
         $path = $request->path;
         $recursive = $request->recursive;
         if($recursive == 1 || $recursive == "1")
-            $videos = Video::where('user_id', Auth::user()->id)->where('path', 'like', $path.'%')->get();
+            $videos = Video::where('user_id', Auth::user()->id)->where('path', 'like', $path.'%')->orderBy("created_at")->get();
         else
-            $videos = Video::where('user_id', Auth::user()->id)->where('path', $path)->get();
+            $videos = Video::where('user_id', Auth::user()->id)->where('path', $path)->orderBy("created_at")->get();
         return response()->json($videos);
     }
 
@@ -1035,9 +1035,9 @@ class VideoController extends Controller
             $user_id = $request->user_id;
             $recursive = $request->recursive;
             if($recursive == 1 || $recursive == "1")
-                $videos = Video::where('user_id', $user_id)->where('path', 'like', $path.'%')->get();
+                $videos = Video::where('user_id', $user_id)->where('path', 'like', $path.'%')->orderBy("created_at")->get();
             else
-                $videos = Video::where('user_id', $user_id)->where('path', $path)->get();
+                $videos = Video::where('user_id', $user_id)->where('path', $path)->orderBy("created_at")->get();
             return response()->json($videos);
         }
         else{

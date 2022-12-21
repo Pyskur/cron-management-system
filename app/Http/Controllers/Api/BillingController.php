@@ -292,37 +292,11 @@ class BillingController extends Controller
             {
                 $bytes_per_video[$key]["user_id"] = $info->user_id;
 
-                // $user = new UserController;
-                // $user->updateBalance($info->user_id, 'Bandwidth', $bytes_per_video[$key]["amount"] / 1024 / 1024 / 1024, 1);
-
                 $billtype = Billing::firstWhere('type', 'Bandwidth');
-                $billdetail = billingdetails::where('type', $billtype->id)->where('user_id', $info->user_id)->get()->first();
-                $used_bytes = $bytes_per_video[$key]["amount"] + ($billdetail ? $billdetail->amount : 0);
-                if($used_bytes / 1024 / 1024 / 1024 * $billtype->amount > 0.01)
-                {
-                    $bal = floor($used_bytes / 1024 / 1024 / 1024 * $billtype->amount * 100) / 100;
-                    $used_bytes = floor($used_bytes - $bal * 1024 * 1024 * 1024 / $billtype->amount);
+                $used_bytes = $bytes_per_video[$key]["amount"];
 
-                    $userinfo = User::firstWhere('id', $info->user_id);
-                    $balance = json_decode($userinfo->balance, true);
-                    if(!isset($balance['GBP'])) $balance['GBP'] = 0;
-                    $balance['GBP'] -= $bal;
-
-                    $userinfo->update(['balance' => json_encode($balance)]);
-                    // User::where('id', $info->user_id)->update(['balance' => $user->balance - $bal]);
-                }
-                if($billdetail)
-                {
-                    billingdetails::where('type', $billtype->id)->where('user_id', $info->user_id)->update(['amount' => $used_bytes]);
-                }
-                else
-                {
-                    billingdetails::create([
-                        "type" => $billtype->id,
-                        "amount" => $used_bytes,
-                        "user_id" => $info->user_id
-                    ]);
-                }
+                $user = new UserController;
+                $user->updateBalance($info->user_id, 'Bandwidth', $used_bytes, 1);
 
                 $updates = ['views' => $info->views + $bytes_per_video[$key]['viewed'],
                             'bytes' => $info->bytes + $bytes_per_video[$key]['amount'],

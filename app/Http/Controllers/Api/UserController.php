@@ -270,18 +270,40 @@ class UserController extends Controller
         $billtype = Billing::firstWhere('type', $type);
         $balance = $billtype->amount;
 
-        /* billingdetails::create([
+        $userBalance = $this->getBalanceBySymbol($user, new Request(['symbol' => 'GBP']));
+
+        billingdetails::create([
             "type" => $billtype->id,
             "amount" => $size,
             "user_id" => $user->id
-        ]); */
+        ]);
 
-        $userBalance = $this->getBalanceBySymbol($user, new Request(['symbol' => 'GBP']));
-        $newBalance = floatval($userBalance) - $balance * $size;
-        if ($newBalance < 0) {
+        $billingdetail = billingdetails::where('type', $billtype->type)->where('user_id', $user->id);
+        if ($billingdetail) {
+            $size = $size + $billingdetail->amount;
+            $billingdetail->update(['amount' => $size]);
+        } else {
+            billingdetails::create([
+                "type" => $billtype->id,
+                "amount" => $size,
+                "user_id" => $user->id
+            ]);
+        }
+
+        if ($billtype->type == 'Bandwidth') {
+            $billedSize = $billingdetail ? $billingdetail->amount / $billtype->amount : 0;
+            if (($size / 1024 / 1024 / 1024 - $billedSize) * $billtype->amount >= 0.01) {
+                $bal = floor($size / 1024 / 1024 / 1024 * $billtype->amount * 100) / 100;
+                $newBalance = floatval($userBalance) - $bal;
+            }
+        } else {
+            $newBalance = floatval($userBalance) - $balance * $size;
+        }
+
+        if ($billtype->type != 'Bandwidth' && $newBalance < 0) {
             return false;
         }
-        
+
         $this->setBalanceBySymbol($user, new Request(['symbol' => 'GBP', 'amount' => $newBalance]));
 
         return true;

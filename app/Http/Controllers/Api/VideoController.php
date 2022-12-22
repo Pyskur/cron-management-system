@@ -34,7 +34,7 @@ class VideoController extends Controller
     {
         $user = Auth::user();
         if ($user->tokenCan(Permission::CAN_ALL) || $user->tokenCan(Permission::CAN_VIDEO_INDEX)) {
-            $videos = Video::all()->orderBy("created_at");
+            $videos = Video::all()->sortBy("created_at");
             return response()->json($videos);
         }
         else{

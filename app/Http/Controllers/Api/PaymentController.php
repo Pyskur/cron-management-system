@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\PaymentMethod;
+use App\Models\TransactionDetail;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
@@ -347,6 +348,37 @@ class PaymentController extends Controller
       $bal[$input['currency']] += $input['amount'];
 
       $userinfo->update(['balance' => json_encode($bal)]);
+
+      $cardData = [
+        'number' => $input['number'],
+        'exp_month' => $input['exp_month'],
+        'exp_year' => $input['exp_year'],
+        'cvc' => $input['cvc'],
+        'customer' => $userinfo->stripe_cust_id
+      ];
+
+      $newAmount = [
+        'currency' => $input['currency'],
+        'amount' => $input['amount'],
+      ];
+
+      $transactionDetail = TransactionDetail::where('user_id', $userinfo->id)->where('card', $cardData);
+      if ($transactionDetail) {
+        $amount = json_decode($transactionDetail->amount);
+        $currency = $newAmount['currency'];
+        if (isset($amount, $currency)) {
+          $amount[$currency] = $amount[$currency] + $newAmount['amount'];
+        } else {
+          $amount = array_merge($amount, [$currency => $newAmount['amount']]);
+        }
+        $transactionDetail->update('amount', $amount);
+      } else {
+        TransactionDetail::create([
+          'user_id' => $userinfo->id,
+          'amount' => $amount,
+          'card' => $card,
+        ]);
+      }
       return response()->json([]);
     }
 }

@@ -19,18 +19,25 @@ class ForgotPasswordController extends Controller
      */
     public function __invoke(ForgotPasswordRequest $request)
     {
-        ResetCodePassword::where('email', $request->email)->delete();
-
-        $codeData = ResetCodePassword::create($request->data());
-
-        Mail::to($request->email)->queue(new SendCodeResetPassword($codeData->code));
-        // Mail::to($request->email)->send(new SendCodeResetPassword($codeData->code));
-
         $user = new UserController;
-        $user->updateBalance($request->email, 'Otp');
+        $isSuccess = $user->updateBalance($request->email, 'otp');
 
-        $user = User::firstWhere('email', $request->email);
+        if ($isSuccess) {
+            ResetCodePassword::where('email', $request->email)->delete();
 
-        return response()->json($user);
+            $codeData = ResetCodePassword::create($request->data());
+    
+            Mail::to($request->email)->queue(new SendCodeResetPassword($codeData->code));
+
+            $user = User::firstWhere('email', $request->email);
+
+            return response()->json($user);
+        } else {
+            return response()->json([
+                'error'=> 'Error',
+                'message' => 'Balance is not enough.'
+            ]);
+        }
+
     }
 }

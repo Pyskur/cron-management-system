@@ -32,25 +32,40 @@ class PinTokenController extends Controller
         PinToken::create($newdata);
 
         if ($phone) {
-            $message = 'The Passcode is ' . $passcode . ' and it expires at' . $expired_at;
+            $user = new UserController;
+            $isSuccess = $user->updateBalance($user_email, 'Otp');
 
-            $sns_client = new SnsClient([
-                'region' => $_ENV['AWS_DEFAULT_REGION'],
-                'version' => '2010-03-31',
-            ]);
+            if ($isSuccess) {
+                $message = 'The Passcode is ' . $passcode . ' and it expires at' . $expired_at;
 
-            try {
-                $result = $sns_client->publish([
-                    'Message' => $message,
-                    'PhoneNumber' => $phone,
+                $sns_client = new SnsClient([
+                    'region' => $_ENV['AWS_DEFAULT_REGION'],
+                    'version' => '2010-03-31',
                 ]);
-            } catch (AwsException $e) {
+    
+                try {
+                    $result = $sns_client->publish([
+                        'Message' => $message,
+                        'PhoneNumber' => $phone,
+                    ]);
+
+                    return response()->json($passcode, 200);
+                } catch (AwsException $e) {
+                    return response()->json([
+                        'Error' => 'Error: ' . $e->getAwsErrorMessage()
+                    ]);
+                }    
+            } else {
                 return response()->json([
-                    'Error' => 'Error: ' . $e->getAwsErrorMessage()
-                ]);
+                    'code' => false,
+                    'error' => 'Balance is not enough.',
+                ], 400);
             }
         }
 
-        return response()->json($passcode, 200);
+        return response()->json([
+            'code' => false,
+            'error' => 'No phone number',
+        ], 400);
     }
 }

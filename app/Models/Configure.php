@@ -13,4 +13,9 @@ class Configure extends Model
         'name',
         'enabled',
     ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

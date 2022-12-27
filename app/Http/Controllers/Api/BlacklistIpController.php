@@ -161,14 +161,6 @@ class BlacklistIpController extends Controller
                 ]);
             }
 
-            if (BlacklistIp::firstWhere('ip_address', $input['ip_address'])) {
-                return response()->json([
-                    "error" => "Error",
-                    "code"=> 0,
-                    "message"=> "Already Exist"
-                ]);
-            }
-
             try {
                 $blacklistIp->update($input);
                 return response()->json($blacklistIp);

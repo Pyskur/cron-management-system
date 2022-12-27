@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\MoneyController;
 use App\Http\Controllers\Api\BlacklistIpController;
 use App\Http\Controllers\Api\WhitelistIpController;
+use App\Http\Controllers\Api\ConfigureController;
 use Illuminate\Support\Facades\Auth;
 use App\Permissions\Permission;
 
@@ -65,6 +66,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('users/{user}/companies', [UserController::class, 'getCompanies'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_COMPANIES]);
         Route::get('users/{user}/groups', [UserController::class, 'getGroups'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_GROUPS]);
         Route::get('users/{user}/balanceBySymbol', [UserController::class, 'getBalanceBySymbol'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_GET_BALANCE]);
+        Route::post('users/{user}/setBalanceBySymbol', [UserController::class, 'setBalanceBySymbol'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_USER_SET_BALANCE]);
 
         Route::get('companies/{company}/users', [CompanyController::class, 'getUsers'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_GET_USERS]);
         Route::post('companies/add-user', [CompanyController::class, 'addUsertoCompany'])->middleware(['ability:'.Permission::CAN_ALL.','.Permission::CAN_COMPANY_ADD_USER]);
@@ -103,6 +105,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::apiResource('users', UserController::class);
         Route::apiResource('notifications', NotificationController::class);
+        Route::apiResource('configures', ConfigureController::class);
         Route::apiResource('keys', KeyController::class);
         Route::apiResource('keys_codes', KeysCodeController::class);
         Route::apiResource('keys_refs', KeysRefController::class);
@@ -139,7 +142,8 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
     Route::get('login_required', [AuthController::class, 'login_required'])->name('login');
-    Route::post('email_verification', [AuthController::class, 'email_verification']);
+    Route::post('send/verify', [AuthController::class, 'sendVerifyEmail']);
+    Route::post('verify/email', [AuthController::class, 'email_verification']);
 	Route::post('token', [AuthController::class, 'loginWithApiKey']);
     Route::post('passcode', [AuthController::class, 'verifyWithPasscode']);
     Route::post('password/email', ForgotPasswordController::class);

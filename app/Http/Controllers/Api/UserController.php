@@ -270,20 +270,41 @@ class UserController extends Controller
         $billtype = Billing::firstWhere('type', $type);
         $balance = $billtype->amount;
 
-        /* billingdetails::create([
+        $userBalance = $this->getBalanceBySymbol($user, new Request(['symbol' => 'GBP']));
+
+        billingdetails::create([
             "type" => $billtype->id,
             "amount" => $size,
             "user_id" => $user->id
-        ]); */
+        ]);
 
-        $newdata = [];
-        $newdata['balance'] = $user->balance - $balance * $size;
+        $billingdetail = billingdetails::where('type', $billtype->type)->where('user_id', $user->id);
+        if ($billingdetail) {
+            $size = $size + $billingdetail->amount;
+            $billingdetail->update(['amount' => $size]);
+        } else {
+            billingdetails::create([
+                "type" => $billtype->id,
+                "amount" => $size,
+                "user_id" => $user->id
+            ]);
+        }
 
-        $user->update($newdata);
+        if ($billtype->type == 'Bandwidth') {
+            $billedSize = $billingdetail ? $billingdetail->amount / $billtype->amount : 0;
+            if (($size / 1024 / 1024 / 1024 - $billedSize) * $billtype->amount >= 0.01) {
+                $bal = floor($size / 1024 / 1024 / 1024 * $billtype->amount * 100) / 100;
+                $newBalance = floatval($userBalance) - $bal;
+            }
+        } else {
+            $newBalance = floatval($userBalance) - $balance * $size;
+        }
 
-        if ($newdata['balance'] < 0) {
+        if ($billtype->type != 'Bandwidth' && $newBalance < 0) {
             return false;
         }
+
+        $this->setBalanceBySymbol($user, new Request(['symbol' => 'GBP', 'amount' => $newBalance]));
 
         return true;
     }
@@ -342,8 +363,39 @@ class UserController extends Controller
             $balanceBySymbol = $userBalance[$symbol];
         }
 
-        return response()->json([
-            $symbol => $balanceBySymbol,
+        return $balanceBySymbol;
+    }
+
+    public function setBalanceBySymbol(User $user, Request $request)
+    {
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'symbol' => 'required|string|size:3',
+            'amount' => 'required|numeric|between:0,99999.99',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "error" => "Validation Error",
+                "code" => 0,
+                "message" => $validator->errors()
+            ]);
+        }
+
+        $symbol = $request->symbol;
+        $amount = $request->amount;
+        $userBalance = json_decode($user->balance, true);
+        if (isset($userBalance[$symbol])) {
+            $userBalance[$symbol] = floatval($amount);
+        } else {
+            $newBalance = [$symbol => floatval($amount)];
+            $userBalance = array_merge($userBalance, $newBalance);
+        }
+
+        $newdata = [];
+        $newdata['balance'] = $userBalance;
+        $user->update($newdata);
+
+        return response()->json($user->balance);
     }
 }
